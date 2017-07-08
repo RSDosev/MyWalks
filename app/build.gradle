@@ -1,0 +1,66 @@
+apply plugin: 'com.android.application'
+apply plugin: 'me.tatarka.retrolambda'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+
+    compileOptions {
+        // For retrolambda support
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    defaultConfig {
+        applicationId "com.radodosev.mywalks"
+        minSdkVersion 21
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    def rxBindingVersion = '2.0.0'
+    def androidSupportVersion = '25.3.1'
+    def leakCanaryVersion = '1.5.1'
+    def playServicesVersion = '11.0.2'
+    def dbFlowVersion = "4.0.4"
+
+    compile 'com.hannesdorfmann.mosby3:mvi:3.0.4'
+
+    compile "com.android.support:appcompat-v7:$androidSupportVersion"
+    compile "com.android.support:design:$androidSupportVersion"
+    compile "com.android.support:recyclerview-v7:$androidSupportVersion"
+    compile "com.android.support:transition:$androidSupportVersion"
+    compile "com.android.support:design:$androidSupportVersion"
+
+    compile "com.google.android.gms:play-services-maps:$playServicesVersion"
+    compile "com.google.android.gms:play-services-location:$playServicesVersion"
+
+    compile 'com.jakewharton.timber:timber:4.5.0'
+
+    compile 'com.jakewharton:butterknife:8.6.0'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.6.0'
+
+    annotationProcessor "com.github.Raizlabs.DBFlow:dbflow-processor:$dbFlowVersion"
+    compile "com.github.Raizlabs.DBFlow:dbflow-core:$dbFlowVersion"
+    compile "com.github.Raizlabs.DBFlow:dbflow:$dbFlowVersion"
+    compile "com.github.Raizlabs.DBFlow:dbflow-rx2:$dbFlowVersion"
+
+    debugCompile "com.squareup.leakcanary:leakcanary-android:$leakCanaryVersion"
+    releaseCompile "com.squareup.leakcanary:leakcanary-android-no-op:$leakCanaryVersion"
+    testCompile "com.squareup.leakcanary:leakcanary-android-no-op:$leakCanaryVersion"
+
+    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    compile "com.jakewharton.rxbinding2:rxbinding:$rxBindingVersion"
+    compile "com.jakewharton.rxbinding2:rxbinding-support-v4:$rxBindingVersion"
+    compile "com.jakewharton.rxbinding2:rxbinding-design:$rxBindingVersion"
+    compile "com.jakewharton.rxbinding2:rxbinding-recyclerview-v7:$rxBindingVersion"
+}
