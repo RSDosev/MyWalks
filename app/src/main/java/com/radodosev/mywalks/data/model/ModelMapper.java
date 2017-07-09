@@ -1,5 +1,6 @@
 package com.radodosev.mywalks.data.model;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.radodosev.mywalks.data.db.RoutePointsTable;
 import com.radodosev.mywalks.data.db.WalksTable;
 
@@ -14,11 +15,11 @@ import io.reactivex.Observable;
 public final class ModelMapper {
     private ModelMapper(){}
 
-    public static WalksTable fromWalksToWalkTable(Walk walk){
+    public static WalksTable fromWalksToWalkTable(final Walk walk){
         return new WalksTable(walk.getStartTime(), walk.getEndTime(), fromRoutePointsToRoutePointsTable(walk.getRoutePoints()));
     }
 
-    public static List<RoutePointsTable> fromRoutePointsToRoutePointsTable(List<Walk.RoutePoint> routePoints){
+    public static List<RoutePointsTable> fromRoutePointsToRoutePointsTable(final List<Walk.RoutePoint> routePoints){
         return Observable
                 .fromIterable(routePoints)
                 .map(routePoint -> new RoutePointsTable(routePoint.getLatitude(), routePoint.getLongitude()))
@@ -26,15 +27,27 @@ public final class ModelMapper {
                 .blockingGet();
     }
 
-    public static Walk fromWalksTableToWalk(WalksTable walksTable){
+    public static Walk fromWalksTableToWalk(final WalksTable walksTable){
         return Walk.createNew(walksTable.getStartTime(), walksTable.getEndTime(), fromRoutePointsTableToRoutePoints(walksTable.getRoutePoints()));
     }
 
-    public static List<Walk.RoutePoint> fromRoutePointsTableToRoutePoints(List<RoutePointsTable> routePointsTables){
+    public static List<Walk.RoutePoint> fromRoutePointsTableToRoutePoints(final List<RoutePointsTable> routePointsTables){
         return Observable
                 .fromIterable(routePointsTables)
                 .map(routePointsTable -> new Walk.RoutePoint(routePointsTable.getLatitude(), routePointsTable.getLongitude()))
                 .toList()
                 .blockingGet();
+    }
+
+    public static List<LatLng> fromRoutePointsToLatLng(final List<Walk.RoutePoint> routePoints){
+        return Observable
+                .fromIterable(routePoints)
+                .map(ModelMapper::fromRoutePointToLatLng)
+                .toList()
+                .blockingGet();
+    }
+
+    public static LatLng fromRoutePointToLatLng(final Walk.RoutePoint routePoint){
+        return new LatLng(routePoint.getLatitude(), routePoint.getLongitude());
     }
 }

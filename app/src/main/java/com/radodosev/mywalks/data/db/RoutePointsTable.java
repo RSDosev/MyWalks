@@ -32,6 +32,8 @@ public class RoutePointsTable extends BaseRXModel {
     @Column
     double longitude;
 
+    public RoutePointsTable(){}
+
     public RoutePointsTable(double latitude, double longitude){
         this.latitude = latitude;
         this.longitude = longitude;

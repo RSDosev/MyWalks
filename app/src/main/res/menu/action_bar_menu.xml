@@ -5,6 +5,6 @@
         android:id="@+id/menu_item_show_all_walks"
         android:orderInCategory="100"
         app:showAsAction="always"
-        android:icon="@drawable/common_full_open_on_phone"
-        android:title="Refresh"/>
+        android:icon="@drawable/ic_storage"
+        android:title="@string/menu_title_show_all_walks"/>
 </menu>

@@ -36,6 +36,8 @@ public class WalksTable extends BaseRXModel {
 
     List<RoutePointsTable> routePoints;
 
+    public WalksTable(){}
+
     public WalksTable(Date startTime, Date endTime, List<RoutePointsTable> routePoints){
         this.startTime = startTime;
         this.endTime = endTime;

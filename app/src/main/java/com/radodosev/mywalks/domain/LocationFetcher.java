@@ -13,6 +13,7 @@ import android.support.v4.app.ActivityCompat;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -44,7 +45,6 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
         int SETTINGS = 1;
         int LOCATION = 2;
     }
-
 
     private
     @Mode
@@ -87,8 +87,8 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
                     .addOnConnectionFailedListener(this)
                     .addApi(LocationServices.API)
                     .build();
-            googleApiClient.connect();
         }
+        googleApiClient.connect();
     }
 
     @Override
@@ -108,8 +108,10 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
             return;
         PendingResult<LocationSettingsResult> locationSettingsResult = LocationServices.SettingsApi.checkLocationSettings(
                 googleApiClient,
-                new LocationSettingsRequest.Builder().addLocationRequest(createLocationRequest()).build());
-
+                new LocationSettingsRequest.Builder()
+                        .addLocationRequest(createLocationRequest())
+                        .setAlwaysShow(true)
+                        .build());
 
         locationSettingsResult.setResultCallback(result -> {
             if (locationSettingsEmitter.isDisposed())
@@ -118,17 +120,17 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
                 case LocationSettingsStatusCodes.SUCCESS:
                     // All location settings are satisfied. The client can
                     // initialize location requests here.
-                    locationSettingsEmitter.onNext(new LocationSettingsStatus(true));
+                    locationSettingsEmitter.onNext(new LocationSettingsStatus());
                     break;
                 case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                     // Location settings are not satisfied, but this can be fixed
                     // by showing the user a dialog.
-                    locationSettingsEmitter.onNext(new LocationSettingsStatus(false, true));
+                    locationSettingsEmitter.onNext(new LocationSettingsStatus(result.getStatus()));
                     break;
                 case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
                     // Location settings are not satisfied. However, we have no way
                     // to fix the settings so we won't show the dialog.
-                    locationSettingsEmitter.onNext(new LocationSettingsStatus(false, false));
+                    locationSettingsEmitter.onNext(new LocationSettingsStatus(result.getStatus(), false, false));
                     break;
             }
             locationSettingsEmitter.onComplete();
@@ -151,8 +153,8 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
     private LocationRequest createLocationRequest() {
         final LocationRequest locationRequest = new LocationRequest();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setFastestInterval(1000);
         locationRequest.setInterval(1000);
+        locationRequest.setSmallestDisplacement(1);
         return locationRequest;
     }
 
@@ -188,17 +190,26 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
     }
 
     public static class LocationSettingsStatus {
+        private final Status status;
         private final boolean allSettingsEnabled;
         private final boolean problemRecoverable;
 
-        public LocationSettingsStatus(boolean allSettingsEnabled) {
-            this.allSettingsEnabled = allSettingsEnabled;
-            this.problemRecoverable = true;
+        public LocationSettingsStatus(Status status) {
+            this(status, false, true);
         }
 
-        public LocationSettingsStatus(boolean allSettingsEnabled, boolean problemIsRecoverable) {
+        public LocationSettingsStatus() {
+            this(null, true, true);
+        }
+
+        public LocationSettingsStatus(Status status, boolean allSettingsEnabled, boolean problemIsRecoverable) {
+            this.status = status;
             this.allSettingsEnabled = allSettingsEnabled;
             this.problemRecoverable = problemIsRecoverable;
+        }
+
+        public Status getStatus() {
+            return status;
         }
 
         public boolean areAllSettingsEnabled() {

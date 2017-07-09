@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">MyWalks</string>
+    <string name="menu_title_show_all_walks">View all walks</string>
 </resources>

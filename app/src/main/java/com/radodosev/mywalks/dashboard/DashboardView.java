@@ -33,7 +33,10 @@ public interface DashboardView extends MvpView {
    *
    * @return The emitted item boolean can be ignored because it is always true
    */
-  Observable<Boolean> loadCurrentLocation();
+  Observable<Boolean> checkGPSTurnedOn();
+
+
+  Observable<Boolean> trackAWalk();
 
   /**
    * The intent to load the next page
