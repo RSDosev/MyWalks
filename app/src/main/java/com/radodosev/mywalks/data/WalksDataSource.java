@@ -4,6 +4,7 @@ import com.radodosev.mywalks.data.model.Walk;
 
 import java.util.List;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 
 /**
@@ -14,5 +15,5 @@ public interface WalksDataSource {
 
     Single<Long> addWalk(Walk walk);
 
-    Single<List<Walk>> getAllWalks();
+    Observable<List<Walk>> getAllWalks();
 }

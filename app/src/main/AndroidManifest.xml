@@ -23,6 +23,10 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".walksjournal.WalksJournalActivity"
+            android:label="@string/screen_title_walks_journal" />
+
         <service android:name=".domain.WalkTrackerService" />
 
         <meta-data

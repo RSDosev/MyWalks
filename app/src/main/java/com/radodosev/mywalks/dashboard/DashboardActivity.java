@@ -95,7 +95,7 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
     @NonNull
     @Override
     public DashboardPresenter createPresenter() {
-        return new DashboardPresenter(DI.provideWalksTracker(), DI.provideLocationFetcher());
+        return DI.provideDashboardPresenter();
     }
 
     @Override

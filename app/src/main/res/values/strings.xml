@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">MyWalks</string>
+    <string name="screen_title_walks_journal">Recorded walks</string>
     <string name="menu_title_show_all_walks">View all walks</string>
 </resources>

@@ -21,29 +21,25 @@ import static com.radodosev.mywalks.dashboard.DashboardViewState.State.WALK_STAR
  */
 
 class DashboardViewState {
-    public Status getLocationSettingsStatus() {
-        return locationSettingsStatus;
-    }
-
     @Retention(RetentionPolicy.SOURCE)
     @IntDef()
     @interface State {
-        int GPS_ON = 0;
-        int GPS_OFF = 1;
-        int GPS_NOT_AVAILABLE = 2;
-        int WALK_IN_PROGRESS = 3;
-        int WALK_STARTED = 4;
-        int WALK_FINISHED = 5;
-        int ERROR = 6;
+        int GPS_ON = 1;
+        int GPS_OFF = 2;
+        int GPS_NOT_AVAILABLE = 3;
+        int WALK_IN_PROGRESS = 4;
+        int WALK_STARTED = 5;
+        int WALK_FINISHED = 6;
+        int ERROR = 7;
     }
 
     private final
     @State
     int type;
+
     private final Throwable error;
     private final Walk currentWalk;
     private final Status locationSettingsStatus;
-
     DashboardViewState(int type, Throwable error, Walk currentWalk, Status locationSettingsStatus) {
         this.type = type;
         this.error = error;
@@ -63,6 +59,10 @@ class DashboardViewState {
 
     public Walk getCurrentWalk() {
         return currentWalk;
+    }
+
+    public Status getLocationSettingsStatus() {
+        return locationSettingsStatus;
     }
 
     public static DashboardViewState ERROR(Throwable error) {

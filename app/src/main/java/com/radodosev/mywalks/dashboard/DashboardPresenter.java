@@ -25,7 +25,7 @@ public class DashboardPresenter extends MviBasePresenter<DashboardView, Dashboar
 
     LocationFetcher locationFetcher;
 
-    DashboardPresenter(WalksTracker walksTracker, LocationFetcher locationFetcher) {
+    public DashboardPresenter(WalksTracker walksTracker, LocationFetcher locationFetcher) {
         this.locationFetcher = locationFetcher;
     }
 
@@ -34,7 +34,7 @@ public class DashboardPresenter extends MviBasePresenter<DashboardView, Dashboar
         Context context = MyWalksApplication.get();
 
         final Observable<DashboardViewState> gpsTurnedOnCheck = intent(DashboardView::checkGPSTurnedOn)
-                .doOnNext(ignore -> Timber.d("intent: DashboardView::checkGPSTurnedOn"))
+                .doOnNext(ignore -> Timber.d("intent: WalksJournalView::checkGPSTurnedOn"))
                 .flatMap(ignore -> locationFetcher.getLocationSettings(MyWalksApplication.get())
                         .map(locationSettingsStatus -> {
                             if (locationSettingsStatus.areAllSettingsEnabled()) {
@@ -67,7 +67,7 @@ public class DashboardPresenter extends MviBasePresenter<DashboardView, Dashboar
 
 
 //        final Observable<DashboardViewState> currentLocationTracking =
-//                intent(DashboardView::checkGPSTurnedOn)
+//                intent(WalksJournalView::checkGPSTurnedOn)
 //                        .doOnNext(ignore -> Timber.d("intent: location tracking"))
 //                        .flatMap(toStart -> locationFetcher.getLocationUpdates(MyWalksApplication.get())
 //                                .map(DashboardViewState::LOCATION_UPDATE)
