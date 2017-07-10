@@ -2,4 +2,8 @@
     <string name="app_name">MyWalks</string>
     <string name="screen_title_walks_journal">Recorded walks</string>
     <string name="menu_title_show_all_walks">View all walks</string>
+    <string name="location_permission_needed_error">Location permission not granted!</string>
+    <string name="play_services_stopped_error">Play services was stopped!</string>
+    <string name="play_services_not_available_error">Play services are not available!</string>
+    <string name="location_permissions_not_granted">Location permissions should be granted before tracking!</string>
 </resources>

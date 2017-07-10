@@ -1,5 +1,6 @@
 package com.radodosev.mywalks.dashboard;
 
+import android.Manifest;
 import android.content.Context;
 
 import com.hannesdorfmann.mosby3.mvi.MviBasePresenter;
@@ -7,6 +8,7 @@ import com.radodosev.mywalks.MyWalksApplication;
 import com.radodosev.mywalks.domain.LocationFetcher;
 import com.radodosev.mywalks.domain.WalkTrackerService;
 import com.radodosev.mywalks.domain.WalksTracker;
+import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -23,28 +25,23 @@ import static com.radodosev.mywalks.domain.WalksTracker.WalkTrackState.Status.RU
 
 public class DashboardPresenter extends MviBasePresenter<DashboardView, DashboardViewState> {
 
+    private final RxPermissions permissionsChecker;
     LocationFetcher locationFetcher;
 
-    public DashboardPresenter(WalksTracker walksTracker, LocationFetcher locationFetcher) {
+    public DashboardPresenter(RxPermissions permissionsChecker, WalksTracker walksTracker, LocationFetcher locationFetcher) {
         this.locationFetcher = locationFetcher;
+        this.permissionsChecker = permissionsChecker;
     }
 
     @Override
     protected void bindIntents() {
         Context context = MyWalksApplication.get();
 
-        final Observable<DashboardViewState> gpsTurnedOnCheck = intent(DashboardView::checkGPSTurnedOn)
-                .doOnNext(ignore -> Timber.d("intent: WalksJournalView::checkGPSTurnedOn"))
-                .flatMap(ignore -> locationFetcher.getLocationSettings(MyWalksApplication.get())
-                        .map(locationSettingsStatus -> {
-                            if (locationSettingsStatus.areAllSettingsEnabled()) {
-                                return DashboardViewState.GPS_ON();
-                            } else if (locationSettingsStatus.isProblemRecoverable()) {
-                                return DashboardViewState.GPS_OFF(locationSettingsStatus.getStatus());
-                            }
-                            return DashboardViewState.GPS_NOT_AVAILABLE();
-                        })
-                        .onErrorReturn(DashboardViewState::ERROR));
+        Observable<DashboardViewState> locationRequirementsMet = locationRequirementCheck(LocationFetcher.newInstance());
+
+        final Observable<DashboardViewState> initialLocationRequirementCheck = intent(DashboardView::checkLocationRequirements)
+                .doOnNext(ignore -> Timber.d("intent: WalksJournalView::checkLocationRequirements"))
+                .flatMap(ignore -> locationRequirementsMet);
 
         final Observable<DashboardViewState> walkTracking =
                 intent(DashboardView::trackAWalk)
@@ -67,26 +64,44 @@ public class DashboardPresenter extends MviBasePresenter<DashboardView, Dashboar
 
 
 //        final Observable<DashboardViewState> currentLocationTracking =
-//                intent(WalksJournalView::checkGPSTurnedOn)
+//                intent(WalksJournalView::checkLocationRequirements)
 //                        .doOnNext(ignore -> Timber.d("intent: location tracking"))
-//                        .flatMap(toStart -> locationFetcher.getLocationUpdates(MyWalksApplication.get())
+//                        .flatMap(toStart -> locationFetcher.getLocationUpdates(MyWalksApplication.newInstance())
 //                                .map(DashboardViewState::LOCATION_UPDATE)
 //                                .onErrorReturn(DashboardViewState::ERROR));
 
-        intent(DashboardView::startStopTracking)
-                .doOnNext(ignore -> Timber.d("intent: start stop tracking"))
-                .doOnNext(ignore -> {
-                    if (WalkTrackerService.isRunning(context))
-                        WalkTrackerService.stop(context);
-                    else
-                        WalkTrackerService.start(context);
-                })
-                .subscribe();
+        final Observable<DashboardViewState> startStopTracking = intent(DashboardView::startStopTracking)
+                .flatMap(ignore -> locationRequirementCheck(LocationFetcher.newInstance())
+                        .doOnNext(viewState -> {
+                            if (WalkTrackerService.isRunning(context))
+                                WalkTrackerService.stop(context);
+                            else
+//                            else if (viewState.areLocationRequirementsMet())
+                                WalkTrackerService.start(context);
+                        }));
 
         final Observable<DashboardViewState> allIntentsObservablesMerged =
-                Observable.merge(gpsTurnedOnCheck, walkTracking)
+                Observable.merge(initialLocationRequirementCheck, walkTracking, startStopTracking)
                         .observeOn(AndroidSchedulers.mainThread());
 
         subscribeViewState(allIntentsObservablesMerged, DashboardView::render);
+    }
+
+    private Observable<DashboardViewState> locationRequirementCheck(LocationFetcher locationFetcher) {
+        return Observable.zip(
+                permissionsChecker.request(Manifest.permission.ACCESS_FINE_LOCATION),
+                locationFetcher.getLocationSettings(MyWalksApplication.get())
+                , (locationPermissionGranted, locationSettingsStatus) -> {
+                    if (!locationPermissionGranted)
+                        return DashboardViewState.LOCATION_PERMISSION_NOT_GRANTED();
+
+                    if (locationSettingsStatus.areAllSettingsEnabled()) {
+                        return DashboardViewState.GPS_ON();
+                    } else if (locationSettingsStatus.isProblemRecoverable()) {
+                        return DashboardViewState.GPS_OFF(locationSettingsStatus.getStatus());
+                    }
+                    return DashboardViewState.GPS_NOT_AVAILABLE();
+                })
+                .onErrorReturn(DashboardViewState::ERROR);
     }
 }

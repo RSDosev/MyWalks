@@ -12,6 +12,7 @@ import static com.radodosev.mywalks.dashboard.DashboardViewState.State.ERROR;
 import static com.radodosev.mywalks.dashboard.DashboardViewState.State.GPS_NOT_AVAILABLE;
 import static com.radodosev.mywalks.dashboard.DashboardViewState.State.GPS_OFF;
 import static com.radodosev.mywalks.dashboard.DashboardViewState.State.GPS_ON;
+import static com.radodosev.mywalks.dashboard.DashboardViewState.State.LOCATION_PERMISSION_NOT_GRANTED;
 import static com.radodosev.mywalks.dashboard.DashboardViewState.State.WALK_FINISHED;
 import static com.radodosev.mywalks.dashboard.DashboardViewState.State.WALK_IN_PROGRESS;
 import static com.radodosev.mywalks.dashboard.DashboardViewState.State.WALK_STARTED;
@@ -22,8 +23,9 @@ import static com.radodosev.mywalks.dashboard.DashboardViewState.State.WALK_STAR
 
 class DashboardViewState {
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef()
-    @interface State {
+    @IntDef({LOCATION_PERMISSION_NOT_GRANTED, GPS_ON, GPS_OFF, GPS_NOT_AVAILABLE, WALK_IN_PROGRESS, WALK_STARTED, WALK_FINISHED, ERROR})
+    public @interface State {
+        int LOCATION_PERMISSION_NOT_GRANTED = 0;
         int GPS_ON = 1;
         int GPS_OFF = 2;
         int GPS_NOT_AVAILABLE = 3;
@@ -40,6 +42,7 @@ class DashboardViewState {
     private final Throwable error;
     private final Walk currentWalk;
     private final Status locationSettingsStatus;
+
     DashboardViewState(int type, Throwable error, Walk currentWalk, Status locationSettingsStatus) {
         this.type = type;
         this.error = error;
@@ -49,6 +52,10 @@ class DashboardViewState {
 
     public Throwable getError() {
         return error;
+    }
+
+    public boolean areLocationRequirementsMet() {
+        return type == GPS_ON ;
     }
 
     public
@@ -67,6 +74,10 @@ class DashboardViewState {
 
     public static DashboardViewState ERROR(Throwable error) {
         return new DashboardViewState(ERROR, error, null, null);
+    }
+
+    public static DashboardViewState LOCATION_PERMISSION_NOT_GRANTED() {
+        return new DashboardViewState(LOCATION_PERMISSION_NOT_GRANTED, null, null, null);
     }
 
     public static DashboardViewState GPS_ON() {

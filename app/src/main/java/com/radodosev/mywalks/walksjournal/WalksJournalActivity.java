@@ -1,5 +1,7 @@
 package com.radodosev.mywalks.walksjournal;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -20,16 +22,13 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import io.reactivex.Observable;
-import permissions.dispatcher.RuntimePermissions;
 
 import static com.radodosev.mywalks.walksjournal.WalksJournalViewState.State.ERROR;
 import static com.radodosev.mywalks.walksjournal.WalksJournalViewState.State.LOADING;
 import static com.radodosev.mywalks.walksjournal.WalksJournalViewState.State.WALKS_LOADED;
 
-@RuntimePermissions
 public class WalksJournalActivity extends MviActivity<WalksJournalView, WalksJournalPresenter>
         implements WalksJournalView {
-
 
     @BindView(R.id.recycle_view_walks_journal)
     RecyclerView walksView;
@@ -47,20 +46,13 @@ public class WalksJournalActivity extends MviActivity<WalksJournalView, WalksJou
         setContentView(R.layout.activity_walks_journal);
         viewUnbinder = ButterKnife.bind(this);
 
-        initWalksVIew();
+        initWalksView();
     }
 
-    private void initWalksVIew() {
+    private void initWalksView() {
         walksAdapter = new WalksJournalAdapter(this);
         walksView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         walksView.setAdapter(walksAdapter);
-    }
-
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        viewUnbinder.unbind();
     }
 
     @NonNull
@@ -114,5 +106,15 @@ public class WalksJournalActivity extends MviActivity<WalksJournalView, WalksJou
         loadingView.setVisibility(View.INVISIBLE);
         walksView.setVisibility(View.VISIBLE);
         walksAdapter.setWalks(walks);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        viewUnbinder.unbind();
+    }
+
+    public static void start(Context context){
+        context.startActivity(new Intent(context, WalksJournalActivity.class));
     }
 }

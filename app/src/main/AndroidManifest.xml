@@ -24,6 +24,7 @@
         </activity>
 
         <activity
+            android:parentActivityName=".dashboard.DashboardActivity"
             android:name=".walksjournal.WalksJournalActivity"
             android:label="@string/screen_title_walks_journal" />
 

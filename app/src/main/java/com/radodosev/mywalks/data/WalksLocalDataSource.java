@@ -30,13 +30,12 @@ public class WalksLocalDataSource implements WalksDataSource {
     }
 
     @Override
-    public Observable<List<Walk>> getAllWalks() {
+    public Single<List<Walk>> getAllWalks() {
         return RXSQLite.rx(
                 SQLite.select().from(WalksTable.class))
                 .queryList()
                 .flatMapObservable(Observable::fromIterable)
                 .map(ModelMapper::fromWalksTableToWalk)
-                .toList()
-                .toObservable();
+                .toList();
     }
 }

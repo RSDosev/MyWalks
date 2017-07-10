@@ -1,12 +1,12 @@
 package com.radodosev.mywalks.dashboard;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v13.app.ActivityCompat;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,7 +22,9 @@ import com.radodosev.mywalks.R;
 import com.radodosev.mywalks.data.model.ModelMapper;
 import com.radodosev.mywalks.data.model.Walk;
 import com.radodosev.mywalks.domain.DI;
+import com.radodosev.mywalks.domain.LocationFetcher;
 import com.radodosev.mywalks.utils.GoogleMapUtils;
+import com.radodosev.mywalks.walksjournal.WalksJournalActivity;
 
 import java.util.List;
 
@@ -30,21 +32,20 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import io.reactivex.Observable;
-import permissions.dispatcher.NeedsPermission;
-import permissions.dispatcher.RuntimePermissions;
 
 import static com.radodosev.mywalks.dashboard.DashboardViewState.State.ERROR;
 import static com.radodosev.mywalks.dashboard.DashboardViewState.State.GPS_NOT_AVAILABLE;
 import static com.radodosev.mywalks.dashboard.DashboardViewState.State.GPS_OFF;
 import static com.radodosev.mywalks.dashboard.DashboardViewState.State.GPS_ON;
+import static com.radodosev.mywalks.dashboard.DashboardViewState.State.LOCATION_PERMISSION_NOT_GRANTED;
 import static com.radodosev.mywalks.dashboard.DashboardViewState.State.WALK_FINISHED;
 import static com.radodosev.mywalks.dashboard.DashboardViewState.State.WALK_IN_PROGRESS;
 import static com.radodosev.mywalks.dashboard.DashboardViewState.State.WALK_STARTED;
 
-@RuntimePermissions
 public class DashboardActivity extends MviActivity<DashboardView, DashboardPresenter>
         implements DashboardView, OnMapReadyCallback {
     private static final int REQUEST_CODE_CHECK_SETTINGS = 123;
+    private static final int REQUEST_CODE_CHECK_LOCATION_PERMISSION = 321;
 
     @BindView(R.id.button_start_stop_tracking)
     FloatingActionButton startStopTrackingButton;
@@ -59,9 +60,8 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
         viewUnbinder = ButterKnife.bind(this);
     }
 
-    @NeedsPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-    void onLocationPermissionsGranted() {
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+    void showTheMap() {
+        // Obtain the SupportMapFragment and newInstance notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map_view_main_map);
         mapFragment.getMapAsync(this);
@@ -85,7 +85,7 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_item_show_all_walks:
-
+                WalksJournalActivity.start(this);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -95,11 +95,11 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
     @NonNull
     @Override
     public DashboardPresenter createPresenter() {
-        return DI.provideDashboardPresenter();
+        return DI.provideDashboardPresenter(this);
     }
 
     @Override
-    public Observable<Boolean> checkGPSTurnedOn() {
+    public Observable<Boolean> checkLocationRequirements() {
         return Observable.just(true);
     }
 
@@ -116,14 +116,18 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
     @Override
     public void render(final DashboardViewState viewState) {
         switch (viewState.getType()) {
+            case LOCATION_PERMISSION_NOT_GRANTED:
+                showMessage(getString(R.string.location_permissions_not_granted));
+                break;
             case GPS_OFF:
-                showEnableLocationDialog(viewState);
+                showTheMap();
+//                showEnableLocationDialog(viewState);
                 break;
             case GPS_NOT_AVAILABLE:
                 showGPSNoExistent();
                 break;
             case GPS_ON:
-                DashboardActivityPermissionsDispatcher.onLocationPermissionsGrantedWithCheck(this);
+                showTheMap();
                 break;
             case WALK_STARTED:
                 showWalkStarted();
@@ -195,39 +199,17 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
     }
 
     private void showError(DashboardViewState viewState) {
+        if (viewState.getError() instanceof LocationFetcher.LocationPermissionNotGrantedException)
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_CODE_CHECK_LOCATION_PERMISSION);
+
         startStopTrackingButton.setImageResource(R.drawable.ic_directions_walk);
         showMessage(viewState.getError().getMessage());
     }
 
     private void showMessage(String message) {
         Snackbar.make(findViewById(R.id.layout_root), message, Snackbar.LENGTH_LONG).show();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        final LocationSettingsStates states = LocationSettingsStates.fromIntent(data);
-        switch (requestCode) {
-            case REQUEST_CODE_CHECK_SETTINGS:
-                switch (resultCode) {
-                    case RESULT_OK:
-                        // All required changes were successfully made
-                        DashboardActivityPermissionsDispatcher.onLocationPermissionsGrantedWithCheck(this);
-                        break;
-                    case RESULT_CANCELED:
-                        // The user was asked to change settings, but chose not to
-                        finish();
-                        break;
-                    default:
-                        break;
-                }
-                break;
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        DashboardActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
     }
 
     @Override

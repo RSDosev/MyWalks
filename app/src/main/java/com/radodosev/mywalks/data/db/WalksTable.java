@@ -31,9 +31,6 @@ public class WalksTable extends BaseRXModel {
     @Column
     Date endTime;
 
-    @ForeignKey(saveForeignKeyModel = true)
-    RoutePointsTable routePointsTable;
-
     List<RoutePointsTable> routePoints;
 
     public WalksTable(){}
@@ -44,13 +41,12 @@ public class WalksTable extends BaseRXModel {
         this.routePoints = routePoints;
     }
 
-
     @OneToMany(methods = OneToMany.Method.ALL, variableName = "routePoints")
     public List<RoutePointsTable> getRoutePoints() {
         if (routePoints == null) {
             routePoints = SQLite.select()
                     .from(RoutePointsTable.class)
-                    .where(RoutePointsTable_Table.walkId.eq(id))
+                    .where(RoutePointsTable_Table.walk_id.eq(id))
                     .queryList();
         }
         return routePoints;

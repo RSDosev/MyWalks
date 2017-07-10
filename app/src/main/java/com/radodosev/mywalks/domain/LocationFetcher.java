@@ -20,6 +20,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.radodosev.mywalks.R;
 
 import java.lang.annotation.Retention;
 
@@ -37,8 +38,6 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
-    private static final String TAG = LocationFetcher.class.getSimpleName();
-
     @Retention(SOURCE)
     @IntDef({SETTINGS, LOCATION})
     public @interface Mode {
@@ -58,7 +57,7 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
     private LocationFetcher() {
     }
 
-    public static LocationFetcher get() {
+    public static LocationFetcher newInstance() {
         return new LocationFetcher();
     }
 
@@ -66,7 +65,7 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
         return Observable.create(emitter -> {
             locationSettingsEmitter = emitter;
             mode = SETTINGS;
-            init(context.getApplicationContext());
+            connectToLocationService(context.getApplicationContext());
         });
     }
 
@@ -74,11 +73,11 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
         return Observable.create(emitter -> {
             locationEmitter = emitter;
             mode = LOCATION;
-            init(context.getApplicationContext());
+            connectToLocationService(context.getApplicationContext());
         });
     }
 
-    private void init(final Context context) {
+    private void connectToLocationService(final Context context) {
         this.context = context;
 
         if (googleApiClient == null) {
@@ -143,7 +142,7 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
         if (ActivityCompat.checkSelfPermission(context,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-            locationEmitter.onError(new IllegalStateException("Location permissions not granted!"));
+            locationEmitter.onError(new LocationPermissionNotGrantedException(context.getString(R.string.location_permissions_not_granted)));
             disconnectFromLocationService();
             return;
         }
@@ -161,7 +160,7 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
     @Override
     public void onConnectionSuspended(int i) {
         if (isLocationSubscriberHere()) {
-            locationEmitter.onError(new IllegalStateException("Play services was stopped!"));
+            locationEmitter.onError(new IllegalStateException(context.getString(R.string.play_services_stopped_error)));
             disconnectFromLocationService();
         }
     }
@@ -169,7 +168,7 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         if (isLocationSubscriberHere()) {
-            locationEmitter.onError(new IllegalStateException("Play services was stopped! Connection failed!"));
+            locationEmitter.onError(new IllegalStateException(context.getString(R.string.play_services_not_available_error)));
             disconnectFromLocationService();
         }
     }
@@ -218,6 +217,12 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
 
         public boolean isProblemRecoverable() {
             return problemRecoverable;
+        }
+    }
+
+    public static class LocationPermissionNotGrantedException extends IllegalStateException {
+        public LocationPermissionNotGrantedException(String message){
+            super(message);
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.radodosev.mywalks.data;
 
+import com.radodosev.mywalks.data.db.WalksTable;
 import com.radodosev.mywalks.data.model.Walk;
 
 import java.util.List;
@@ -15,5 +16,5 @@ public interface WalksDataSource {
 
     Single<Long> addWalk(Walk walk);
 
-    Observable<List<Walk>> getAllWalks();
+    Single<List<Walk>> getAllWalks();
 }

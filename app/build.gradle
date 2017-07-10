@@ -42,6 +42,7 @@ dependencies {
     compile "com.android.support:transition:$androidSupportVersion"
     compile "com.android.support:design:$androidSupportVersion"
 
+    compile 'com.tbruyelle.rxpermissions2:rxpermissions:0.9.4@aar'
     compile "com.github.hotchemi:permissionsdispatcher:$permissionsDispatcherVersion"
     annotationProcessor "com.github.hotchemi:permissionsdispatcher-processor:$permissionsDispatcherVersion"
 

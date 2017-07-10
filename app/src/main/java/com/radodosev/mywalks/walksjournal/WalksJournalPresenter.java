@@ -22,6 +22,7 @@ import static com.radodosev.mywalks.domain.WalksTracker.WalkTrackState.Status.ER
 import static com.radodosev.mywalks.domain.WalksTracker.WalkTrackState.Status.FINISHED;
 import static com.radodosev.mywalks.domain.WalksTracker.WalkTrackState.Status.JUST_STARTED;
 import static com.radodosev.mywalks.domain.WalksTracker.WalkTrackState.Status.RUNNING;
+import static com.radodosev.mywalks.walksjournal.WalksJournalViewState.State.WALKS_LOADED;
 
 /**
  * Created by Rado on 7/8/2017.
@@ -38,9 +39,9 @@ public class WalksJournalPresenter extends MviBasePresenter<WalksJournalView, Wa
     @Override
     protected void bindIntents() {
         //
-//        final Observable<WalksJournalViewState> gpsTurnedOnCheck = intent(WalksJournalView::checkGPSTurnedOn)
-//                .doOnNext(ignore -> Timber.d("intent: WalksJournalView::checkGPSTurnedOn"))
-//                .flatMap(ignore -> locationFetcher.getLocationSettings(MyWalksApplication.get())
+//        final Observable<WalksJournalViewState> gpsTurnedOnCheck = intent(WalksJournalView::checkLocationRequirements)
+//                .doOnNext(ignore -> Timber.d("intent: WalksJournalView::checkLocationRequirements"))
+//                .flatMap(ignore -> locationFetcher.getLocationSettings(MyWalksApplication.newInstance())
 //                        .map(locationSettingsStatus -> {
 //                            if (locationSettingsStatus.areAllSettingsEnabled()) {
 //                                return WalksJournalViewState.GPS_ON();
@@ -54,16 +55,16 @@ public class WalksJournalPresenter extends MviBasePresenter<WalksJournalView, Wa
         final Observable<WalksJournalViewState> loadAllWalks =
                 intent(WalksJournalView::loadWalksIntent)
                         .doOnNext(ignore -> Timber.d("intent: loadAllWalks"))
-                        .flatMap(ignore -> dataSource.getAllWalks()
+                        .flatMapSingle(ignore -> dataSource.getAllWalks()
                                 .map(WalksJournalViewState::WALKS_LOADED)
-                                .startWith(ignored -> WalksJournalViewState.LOADING())
+//                                .startWith(ignored -> WalksJournalViewState.LOADING())
                                 .doOnError(WalksJournalViewState::ERROR));
 
 
 //        final Observable<WalksJournalViewState> currentLocationTracking =
-//                intent(WalksJournalView::checkGPSTurnedOn)
+//                intent(WalksJournalView::checkLocationRequirements)
 //                        .doOnNext(ignore -> Timber.d("intent: location tracking"))
-//                        .flatMap(toStart -> locationFetcher.getLocationUpdates(MyWalksApplication.get())
+//                        .flatMap(toStart -> locationFetcher.getLocationUpdates(MyWalksApplication.newInstance())
 //                                .map(WalksJournalViewState::LOCATION_UPDATE)
 //                                .onErrorReturn(WalksJournalViewState::ERROR));
 
@@ -81,6 +82,11 @@ public class WalksJournalPresenter extends MviBasePresenter<WalksJournalView, Wa
 //                Observable.merge(gpsTurnedOnCheck, walkTracking)
 //                        .observeOn(AndroidSchedulers.mainThread());
 
-        subscribeViewState(loadAllWalks, WalksJournalView::render);
+        subscribeViewState(loadAllWalks, new ViewStateConsumer<WalksJournalView, WalksJournalViewState>() {
+            @Override
+            public void accept(@android.support.annotation.NonNull WalksJournalView view, @android.support.annotation.NonNull WalksJournalViewState viewState) {
+                view.render(viewState);
+            }
+        });
     }
 }

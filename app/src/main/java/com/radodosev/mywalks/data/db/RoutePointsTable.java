@@ -1,5 +1,6 @@
 package com.radodosev.mywalks.data.db;
 
+import com.radodosev.mywalks.data.model.Walk;
 import com.raizlabs.android.dbflow.annotation.Column;
 import com.raizlabs.android.dbflow.annotation.ForeignKey;
 import com.raizlabs.android.dbflow.annotation.ForeignKeyReference;
@@ -23,8 +24,10 @@ public class RoutePointsTable extends BaseRXModel {
     @PrimaryKey(autoincrement = true)
     long id;
 
-    @Column
-    long walkId;
+    @ForeignKey(saveForeignKeyModel = true,
+            tableClass = WalksTable.class,
+            references = {@ForeignKeyReference(columnName = "walk_id", foreignKeyColumnName = "id")})
+    WalksTable walk;
 
     @Column
     double latitude;
@@ -39,8 +42,8 @@ public class RoutePointsTable extends BaseRXModel {
         this.longitude = longitude;
     }
 
-    public long getWalkId() {
-        return walkId;
+    public WalksTable getWalk() {
+        return walk;
     }
 
     public double getLatitude() {
@@ -49,5 +52,9 @@ public class RoutePointsTable extends BaseRXModel {
 
     public double getLongitude() {
         return longitude;
+    }
+
+    public void setWalk(WalksTable walk) {
+        this.walk = walk;
     }
 }

@@ -1,8 +1,11 @@
 package com.radodosev.mywalks.domain;
 
+import android.app.Activity;
+
 import com.radodosev.mywalks.dashboard.DashboardPresenter;
 import com.radodosev.mywalks.data.WalksLocalDataSource;
 import com.radodosev.mywalks.walksjournal.WalksJournalPresenter;
+import com.tbruyelle.rxpermissions2.RxPermissions;
 
 /**
  * Created by blue on 9.7.2017 г..
@@ -10,7 +13,7 @@ import com.radodosev.mywalks.walksjournal.WalksJournalPresenter;
 
 public class DI {
     public static LocationFetcher provideLocationFetcher() {
-        return LocationFetcher.get();
+        return LocationFetcher.newInstance();
     }
 
     public static WalksLocalDataSource provideLocalDataSource() {
@@ -21,8 +24,8 @@ public class DI {
         return WalksTracker.get();
     }
 
-    public static DashboardPresenter provideDashboardPresenter() {
-        return new DashboardPresenter(provideWalksTracker(), provideLocationFetcher());
+    public static DashboardPresenter provideDashboardPresenter(Activity activity) {
+        return new DashboardPresenter(new RxPermissions(activity), provideWalksTracker(), provideLocationFetcher());
     }
 
     public static WalksJournalPresenter provideWalksJournalPresenter() {

@@ -33,7 +33,7 @@ public interface DashboardView extends MvpView {
    *
    * @return The emitted item boolean can be ignored because it is always true
    */
-  Observable<Boolean> checkGPSTurnedOn();
+  Observable<Boolean> checkLocationRequirements();
 
 
   Observable<Boolean> trackAWalk();
@@ -44,6 +44,8 @@ public interface DashboardView extends MvpView {
    * @return The emitted item boolean can be ignored because it is always true
    */
   Observable<Boolean> startStopTracking();
+
+
 
 
   /**
