@@ -40,7 +40,7 @@ public class DashboardPresenter extends MviBasePresenter<DashboardView, Dashboar
         Observable<DashboardViewState> locationRequirementsMet = locationRequirementCheck(LocationFetcher.newInstance());
 
         final Observable<DashboardViewState> initialLocationRequirementCheck = intent(DashboardView::checkLocationRequirements)
-                .doOnNext(ignore -> Timber.d("intent: WalksJournalView::checkLocationRequirements"))
+                .doOnNext(ignore -> Timber.d("intent: SingleWalkView::checkLocationRequirements"))
                 .flatMap(ignore -> locationRequirementsMet);
 
         final Observable<DashboardViewState> walkTracking =
@@ -64,7 +64,7 @@ public class DashboardPresenter extends MviBasePresenter<DashboardView, Dashboar
 
 
 //        final Observable<DashboardViewState> currentLocationTracking =
-//                intent(WalksJournalView::checkLocationRequirements)
+//                intent(SingleWalkView::checkLocationRequirements)
 //                        .doOnNext(ignore -> Timber.d("intent: location tracking"))
 //                        .flatMap(toStart -> locationFetcher.getLocationUpdates(MyWalksApplication.newInstance())
 //                                .map(DashboardViewState::LOCATION_UPDATE)

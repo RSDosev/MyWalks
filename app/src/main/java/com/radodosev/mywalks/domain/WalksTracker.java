@@ -97,7 +97,7 @@ public final class WalksTracker {
         emitTheTrackState();
 
         if (!currentState.getRoutePoints().isEmpty())
-            walksLocalDataSource.addWalk(currentState.toWalk()).subscribe();
+            walksLocalDataSource.addWalk(currentState.toWalk());
     }
 
     public boolean isTracking() {
@@ -188,7 +188,7 @@ public final class WalksTracker {
         }
 
         public Walk toWalk() {
-            return new Walk(startTime, endTime, routePoints);
+            return new Walk(0, startTime, endTime, routePoints);
         }
     }
 }

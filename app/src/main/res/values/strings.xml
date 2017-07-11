@@ -6,4 +6,6 @@
     <string name="play_services_stopped_error">Play services was stopped!</string>
     <string name="play_services_not_available_error">Play services are not available!</string>
     <string name="location_permissions_not_granted">Location permissions should be granted before tracking!</string>
+    <string name="label_walk_start_time">Start</string>
+    <string name="label_walk_end_time">Finish</string>
 </resources>

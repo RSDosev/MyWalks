@@ -14,7 +14,9 @@ import io.reactivex.Single;
 
 public interface WalksDataSource {
 
-    Single<Long> addWalk(Walk walk);
+    void addWalk(Walk walk);
 
-    Single<List<Walk>> getAllWalks();
+    Observable<Walk> getWalk(long walkId);
+
+    Observable<List<Walk>> getAllWalks();
 }

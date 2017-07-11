@@ -2,9 +2,11 @@ package com.radodosev.mywalks.domain;
 
 import android.app.Activity;
 
+import com.hannesdorfmann.mosby3.mvi.MviPresenter;
 import com.radodosev.mywalks.dashboard.DashboardPresenter;
 import com.radodosev.mywalks.data.WalksLocalDataSource;
 import com.radodosev.mywalks.walksjournal.WalksJournalPresenter;
+import com.radodosev.mywalks.walksjournal.single_walk.SingleWalkPresenter;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
 /**
@@ -30,5 +32,9 @@ public class DI {
 
     public static WalksJournalPresenter provideWalksJournalPresenter() {
         return new WalksJournalPresenter(provideLocalDataSource());
+    }
+
+    public static MviPresenter provideSingleWalkPresenter() {
+        return new SingleWalkPresenter(provideLocalDataSource());
     }
 }

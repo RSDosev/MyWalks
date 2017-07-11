@@ -19,9 +19,11 @@ import java.util.UUID;
 
 @Table(database = WalksDatabase.class)
 public class WalksTable extends BaseRXModel {
+    public static final String COLUMN_ID = "id";
+
 
     @Unique
-    @Column
+    @Column(name = COLUMN_ID)
     @PrimaryKey(autoincrement=true)
     long id;
 
@@ -41,7 +43,7 @@ public class WalksTable extends BaseRXModel {
         this.routePoints = routePoints;
     }
 
-    @OneToMany(methods = OneToMany.Method.ALL, variableName = "routePoints")
+    @OneToMany(methods = {OneToMany.Method.LOAD, OneToMany.Method.DELETE}, variableName = "routePoints")
     public List<RoutePointsTable> getRoutePoints() {
         if (routePoints == null) {
             routePoints = SQLite.select()
@@ -58,5 +60,9 @@ public class WalksTable extends BaseRXModel {
 
     public Date getStartTime() {
         return startTime;
+    }
+
+    public long getId() {
+        return id;
     }
 }

@@ -19,14 +19,17 @@ import java.util.UUID;
 
 @Table(database = WalksDatabase.class)
 public class RoutePointsTable extends BaseRXModel {
+    public static final String COLUMN_ID = "id";
+    public static final String COLUMN_WALK_ID = "walk_id";
+
     @Unique
-    @Column
+    @Column(name = COLUMN_ID)
     @PrimaryKey(autoincrement = true)
     long id;
 
-    @ForeignKey(saveForeignKeyModel = true,
-            tableClass = WalksTable.class,
-            references = {@ForeignKeyReference(columnName = "walk_id", foreignKeyColumnName = "id")})
+    @ForeignKey(tableClass = WalksTable.class,
+            stubbedRelationship = true,
+            references = {@ForeignKeyReference(columnName = COLUMN_WALK_ID, foreignKeyColumnName = WalksTable.COLUMN_ID)})
     WalksTable walk;
 
     @Column
@@ -35,9 +38,10 @@ public class RoutePointsTable extends BaseRXModel {
     @Column
     double longitude;
 
-    public RoutePointsTable(){}
+    public RoutePointsTable() {
+    }
 
-    public RoutePointsTable(double latitude, double longitude){
+    public RoutePointsTable(double latitude, double longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
     }

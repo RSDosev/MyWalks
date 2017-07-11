@@ -8,18 +8,20 @@ import java.util.List;
  */
 
 public final class Walk {
+    private final long id;
     private final Date startTime;
     private final Date endTime;
     private final List<RoutePoint> routePoints;
 
-    public Walk(Date startTime, Date endTime, List<RoutePoint> routePoints) {
+    public Walk(long id, Date startTime, Date endTime, List<RoutePoint> routePoints) {
+        this.id = id;
         this.startTime = startTime;
         this.endTime = endTime;
         this.routePoints = routePoints;
     }
 
-    public static Walk createNew(Date startTime, Date endTime, List<RoutePoint> routePoints) {
-        return new Walk(startTime, endTime, routePoints);
+    public static Walk createNew(long id, Date startTime, Date endTime, List<RoutePoint> routePoints) {
+        return new Walk(id, startTime, endTime, routePoints);
     }
 
     public Date getStartTime() {
@@ -32,6 +34,10 @@ public final class Walk {
 
     public List<RoutePoint> getRoutePoints() {
         return routePoints;
+    }
+
+    public long geId() {
+        return id;
     }
 
     public static class RoutePoint{

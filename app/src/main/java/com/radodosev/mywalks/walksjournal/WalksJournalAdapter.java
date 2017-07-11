@@ -23,12 +23,16 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.radodosev.mywalks.R;
 import com.radodosev.mywalks.data.model.Walk;
+import com.radodosev.mywalks.utils.CommonUtils;
 
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
 import timber.log.Timber;
@@ -48,12 +52,14 @@ public class WalksJournalAdapter extends RecyclerView.Adapter<WalksJournalAdapte
 
     @Override
     public WalksJournalAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return WalksJournalAdapter.ViewHolder.create(activity.getLayoutInflater());
+        return WalksJournalAdapter.ViewHolder.create(parent, activity.getLayoutInflater());
     }
 
     @Override
     public void onBindViewHolder(WalksJournalAdapter.ViewHolder holder, int position) {
-        holder.bind(walks.get(position));
+        holder.bind(walks.get(position), walk -> {
+            clickedWalks.onNext(walk);
+        });
     }
 
     @Override
@@ -96,23 +102,32 @@ public class WalksJournalAdapter extends RecyclerView.Adapter<WalksJournalAdapte
         return clickedWalks.doOnNext(selected -> Timber.d("clicked %s ", selected));
     }
 
-    public Walk getWalkAt(int position) {
-        return walks.get(position);
-    }
-
-
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        @BindView(R.id.text_view_start_time)
+        TextView startTime;
+        @BindView(R.id.text_view_end_time)
+        TextView endTime;
+        View rootView;
 
-        public static ViewHolder create(LayoutInflater inflater) {
-            return new ViewHolder(inflater.inflate(R.layout.list_item_walk, null, false));
+
+        public static ViewHolder create(ViewGroup parent, LayoutInflater inflater) {
+            return new ViewHolder(inflater.inflate(R.layout.list_item_walk, parent, false));
         }
 
         private ViewHolder(View rootView) {
             super(rootView);
+            this.rootView = rootView;
+            ButterKnife.bind(this, rootView);
         }
 
-        public void bind(Walk item) {
+        public void bind(Walk walk, OnWalkSelectedListener onWalkSelectedListener) {
+            rootView.setOnClickListener(view -> onWalkSelectedListener.onWalkSelected(walk));
+            startTime.setText(CommonUtils.formatDateInMyLocale(walk.getStartTime()));
+            endTime.setText(CommonUtils.formatDateInMyLocale(walk.getEndTime()));
+        }
 
+        public interface OnWalkSelectedListener {
+            void onWalkSelected(Walk walk);
         }
     }
 

@@ -22,6 +22,7 @@ import static com.radodosev.mywalks.domain.WalksTracker.WalkTrackState.Status.ER
 import static com.radodosev.mywalks.domain.WalksTracker.WalkTrackState.Status.FINISHED;
 import static com.radodosev.mywalks.domain.WalksTracker.WalkTrackState.Status.JUST_STARTED;
 import static com.radodosev.mywalks.domain.WalksTracker.WalkTrackState.Status.RUNNING;
+import static com.radodosev.mywalks.walksjournal.WalksJournalViewState.State.LOADING;
 import static com.radodosev.mywalks.walksjournal.WalksJournalViewState.State.WALKS_LOADED;
 
 /**
@@ -39,8 +40,8 @@ public class WalksJournalPresenter extends MviBasePresenter<WalksJournalView, Wa
     @Override
     protected void bindIntents() {
         //
-//        final Observable<WalksJournalViewState> gpsTurnedOnCheck = intent(WalksJournalView::checkLocationRequirements)
-//                .doOnNext(ignore -> Timber.d("intent: WalksJournalView::checkLocationRequirements"))
+//        final Observable<WalksJournalViewState> gpsTurnedOnCheck = intent(SingleWalkView::checkLocationRequirements)
+//                .doOnNext(ignore -> Timber.d("intent: SingleWalkView::checkLocationRequirements"))
 //                .flatMap(ignore -> locationFetcher.getLocationSettings(MyWalksApplication.newInstance())
 //                        .map(locationSettingsStatus -> {
 //                            if (locationSettingsStatus.areAllSettingsEnabled()) {
@@ -55,20 +56,19 @@ public class WalksJournalPresenter extends MviBasePresenter<WalksJournalView, Wa
         final Observable<WalksJournalViewState> loadAllWalks =
                 intent(WalksJournalView::loadWalksIntent)
                         .doOnNext(ignore -> Timber.d("intent: loadAllWalks"))
-                        .flatMapSingle(ignore -> dataSource.getAllWalks()
+                        .flatMap(ignore -> dataSource.getAllWalks()
                                 .map(WalksJournalViewState::WALKS_LOADED)
-//                                .startWith(ignored -> WalksJournalViewState.LOADING())
+                                .startWith(WalksJournalViewState.LOADING())
                                 .doOnError(WalksJournalViewState::ERROR));
 
 
-//        final Observable<WalksJournalViewState> currentLocationTracking =
-//                intent(WalksJournalView::checkLocationRequirements)
-//                        .doOnNext(ignore -> Timber.d("intent: location tracking"))
-//                        .flatMap(toStart -> locationFetcher.getLocationUpdates(MyWalksApplication.newInstance())
-//                                .map(WalksJournalViewState::LOCATION_UPDATE)
-//                                .onErrorReturn(WalksJournalViewState::ERROR));
+        final Observable<WalksJournalViewState> showSingleWalk =
+                intent(WalksJournalView::selectWalkIntent)
+                        .doOnNext(ignore -> Timber.d("intent: SHOW_SINGLE_WALK"))
+                        .map(WalksJournalViewState::SHOW_SINGLE_WALK)
+                        .onErrorReturn(WalksJournalViewState::ERROR);
 
-//        intent(WalksJournalView::startStopTracking)
+//        intent(SingleWalkView::startStopTracking)
 //                .doOnNext(ignore -> Timber.d("intent: start stop tracking"))
 //                .doOnNext(ignore -> {
 //                    if (WalkTrackerService.isRunning(context))
@@ -78,15 +78,10 @@ public class WalksJournalPresenter extends MviBasePresenter<WalksJournalView, Wa
 //                })
 //                .subscribe();
 //
-//        final Observable<WalksJournalViewState> allIntentsObservablesMerged =
-//                Observable.merge(gpsTurnedOnCheck, walkTracking)
-//                        .observeOn(AndroidSchedulers.mainThread());
+        final Observable<WalksJournalViewState> allIntentsObservablesMerged =
+                Observable.merge(loadAllWalks, showSingleWalk)
+                        .observeOn(AndroidSchedulers.mainThread());
 
-        subscribeViewState(loadAllWalks, new ViewStateConsumer<WalksJournalView, WalksJournalViewState>() {
-            @Override
-            public void accept(@android.support.annotation.NonNull WalksJournalView view, @android.support.annotation.NonNull WalksJournalViewState viewState) {
-                view.render(viewState);
-            }
-        });
+        subscribeViewState(allIntentsObservablesMerged, WalksJournalView::render);
     }
 }
