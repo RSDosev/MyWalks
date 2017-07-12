@@ -14,25 +14,16 @@ import android.view.ViewGroup;
 
 import com.hannesdorfmann.mosby3.mvi.MviActivity;
 import com.radodosev.mywalks.R;
-import com.radodosev.mywalks.data.WalksLocalDataSource;
-import com.radodosev.mywalks.data.db.RoutePointsTable;
 import com.radodosev.mywalks.data.model.Walk;
 import com.radodosev.mywalks.domain.DI;
 import com.radodosev.mywalks.walksjournal.single_walk.SingleWalkFragment;
 
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import io.reactivex.Observable;
-
-import static com.radodosev.mywalks.walksjournal.WalksJournalViewState.State.ERROR;
-import static com.radodosev.mywalks.walksjournal.WalksJournalViewState.State.LOADING;
-import static com.radodosev.mywalks.walksjournal.WalksJournalViewState.State.SHOW_SINGLE_WALK;
-import static com.radodosev.mywalks.walksjournal.WalksJournalViewState.State.WALKS_LOADED;
 
 public class WalksJournalActivity extends MviActivity<WalksJournalView, WalksJournalPresenter>
         implements WalksJournalView {
@@ -96,23 +87,27 @@ public class WalksJournalActivity extends MviActivity<WalksJournalView, WalksJou
 
     @Override
     public void render(WalksJournalViewState viewState) {
-        switch (viewState.getType()) {
-            case WALKS_LOADED:
-                showAllWalks(viewState.getWalks());
-                break;
-            case SHOW_SINGLE_WALK:
-                showSingleWalk(viewState.getSingleWalk());
-                break;
-            case ERROR:
-                showError(viewState.getError());
-                break;
-            case LOADING:
-                showLoading();
-                break;
-        }
+        TransitionManager.beginDelayedTransition(rootView);
+        renderLoading(viewState.isLoading());
+        if (viewState.getError() != null)
+            renderError(viewState.getError());
+
+        if (viewState.getCurrentWalkToShow() != null)
+            renderSingleWalk(viewState.getCurrentWalkToShow());
+
+        if (!viewState.getAllWalks().isEmpty())
+            renderWalksLoaded(viewState.getAllWalks());
     }
 
-    private void showSingleWalk(Walk walk) {
+    private void renderLoading(final boolean toShow) {
+        loadingView.setVisibility(toShow ? View.VISIBLE : View.GONE);
+    }
+
+    private void renderError(final Throwable error) {
+        Snackbar.make(findViewById(R.id.layout_root), error.getMessage(), Snackbar.LENGTH_LONG).show();
+    }
+
+    private void renderSingleWalk(final Walk walk) {
         singleWalkView.setState(BottomSheetBehavior.STATE_EXPANDED);
 
         getSupportFragmentManager()
@@ -121,19 +116,7 @@ public class WalksJournalActivity extends MviActivity<WalksJournalView, WalksJou
                 .commit();
     }
 
-    private void showError(Throwable error) {
-        Snackbar.make(findViewById(R.id.layout_root), error.getMessage(), Snackbar.LENGTH_LONG).show();
-    }
-
-    private void showLoading() {
-        TransitionManager.beginDelayedTransition(rootView);
-        loadingView.setVisibility(View.VISIBLE);
-        walksView.setVisibility(View.INVISIBLE);
-    }
-
-    private void showAllWalks(List<Walk> walks) {
-        TransitionManager.beginDelayedTransition(rootView);
-        loadingView.setVisibility(View.INVISIBLE);
+    private void renderWalksLoaded(final List<Walk> walks) {
         walksView.setVisibility(View.VISIBLE);
         walksAdapter.setWalks(walks);
     }
@@ -144,7 +127,7 @@ public class WalksJournalActivity extends MviActivity<WalksJournalView, WalksJou
         viewUnbinder.unbind();
     }
 
-    public static void start(Context context){
+    public static void start(Context context) {
         context.startActivity(new Intent(context, WalksJournalActivity.class));
     }
 }

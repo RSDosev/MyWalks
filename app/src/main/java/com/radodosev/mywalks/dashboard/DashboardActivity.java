@@ -32,6 +32,9 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import io.reactivex.Observable;
+import io.reactivex.subjects.BehaviorSubject;
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 import static com.radodosev.mywalks.dashboard.DashboardViewState.State.ERROR;
 import static com.radodosev.mywalks.dashboard.DashboardViewState.State.GPS_NOT_AVAILABLE;
@@ -52,27 +55,23 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
 
     private GoogleMap mapView;
     private Unbinder viewUnbinder;
+    private Subject<Boolean> trackWalkingIntent;
+    private Subject<Boolean> checkLocationRequirementsIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         viewUnbinder = ButterKnife.bind(this);
+        trackWalkingIntent = PublishSubject.create();
+        checkLocationRequirementsIntent = PublishSubject.create();
     }
 
-    void showTheMap() {
-        // Obtain the SupportMapFragment and newInstance notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map_view_main_map);
-        mapFragment.getMapAsync(this);
-    }
-
-    @SuppressWarnings({"MissingPermission"})
     @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mapView = googleMap;
-        mapView.setMyLocationEnabled(true);
-        mapView.getUiSettings().setMapToolbarEnabled(false);
+    protected void onResume() {
+        super.onResume();
+        trackWalkingIntent.onNext(true);
+        checkLocationRequirementsIntent.onNext(true);
     }
 
     @Override
@@ -100,12 +99,12 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
 
     @Override
     public Observable<Boolean> checkLocationRequirements() {
-        return Observable.just(true);
+        return checkLocationRequirementsIntent;
     }
 
     @Override
     public Observable<Boolean> trackAWalk() {
-        return Observable.just(true);
+        return trackWalkingIntent;
     }
 
     @Override
@@ -156,14 +155,29 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
         }
     }
 
+    void showTheMap() {
+        // Obtain the SupportMapFragment and newInstance notified when the map is ready to be used.
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map_view_main_map);
+        mapFragment.getMapAsync(this);
+    }
+
+
+    @SuppressWarnings({"MissingPermission"})
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mapView = googleMap;
+        mapView.setMyLocationEnabled(true);
+        mapView.getUiSettings().setMapToolbarEnabled(false);
+    }
+
     private void showGPSNoExistent() {
-        showMessage("No GPS module! Sorry, nothing to do about it!");
+        showMessage(getString(R.string.notification_not_gps_available));
         startStopTrackingButton.setVisibility(View.GONE);
     }
 
     private void showWalkStarted() {
-        showMessage("Walk started...");
-        startStopTrackingButton.setImageResource(R.drawable.ic_stop);
+        showMessage(getString(R.string.notification_walk_start));
     }
 
     private void showWalkProgress(DashboardViewState viewState) {
@@ -171,13 +185,15 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
             return;
 
         mapView.clear();
+        startStopTrackingButton.setImageResource(R.drawable.ic_stop);
+
         final List<Walk.RoutePoint> currentPoints = viewState.getCurrentWalk().getRoutePoints();
         GoogleMapUtils.drawDottedRoute(mapView,
                 ModelMapper.fromRoutePointsToLatLng(currentPoints));
         GoogleMapUtils.drawMarker(
                 mapView,
                 ModelMapper.fromRoutePointToLatLng(currentPoints.get(0)),
-                "Here you started");
+                getString(R.string.marker_label_walk_start));
 
         Walk.RoutePoint lastPoint = currentPoints.get(currentPoints.size() - 1);
         mapView.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastPoint.getLatitude(), lastPoint.getLongitude()), 17f));
@@ -192,9 +208,9 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
             GoogleMapUtils.drawMarker(
                     mapView,
                     ModelMapper.fromRoutePointToLatLng(completedPoints.get(completedPoints.size() - 1)),
-                    "Here you stopped");
+                    getString(R.string.marker_label_walk_end));
 
-        showMessage("Walk finished...");
+        showMessage(getString(R.string.notification_walk_end));
         startStopTrackingButton.setImageResource(R.drawable.ic_directions_walk);
     }
 

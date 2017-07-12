@@ -37,11 +37,9 @@ public class DashboardPresenter extends MviBasePresenter<DashboardView, Dashboar
     protected void bindIntents() {
         Context context = MyWalksApplication.get();
 
-        Observable<DashboardViewState> locationRequirementsMet = locationRequirementCheck(LocationFetcher.newInstance());
-
         final Observable<DashboardViewState> initialLocationRequirementCheck = intent(DashboardView::checkLocationRequirements)
                 .doOnNext(ignore -> Timber.d("intent: SingleWalkView::checkLocationRequirements"))
-                .flatMap(ignore -> locationRequirementsMet);
+                .flatMap(ignore -> locationRequirementCheck(LocationFetcher.newInstance()));
 
         final Observable<DashboardViewState> walkTracking =
                 intent(DashboardView::trackAWalk)
