@@ -15,7 +15,8 @@ class WalksJournalViewState {
     private final List<Walk> allWalks;
     private final Walk currentWalkToShow;
 
-    WalksJournalViewState(boolean loading, Throwable error, List<Walk> walks, Walk walk) {
+    WalksJournalViewState(final boolean loading, final Throwable error,
+                          final List<Walk> walks, final Walk walk) {
         this.loading = loading;
         this.error = error;
         this.allWalks = walks;
@@ -52,28 +53,28 @@ class WalksJournalViewState {
             this.walks = new ArrayList<>();
         }
 
-        public Builder(WalksJournalViewState oldState) {
+        public Builder(final WalksJournalViewState oldState) {
             this.error = oldState.error;
             this.walk = oldState.currentWalkToShow;
             this.walks = oldState.allWalks;
         }
 
-        public Builder loading(boolean loading) {
+        public Builder loading(final boolean loading) {
             this.loading = loading;
             return this;
         }
 
-        public Builder error(Throwable error) {
+        public Builder error(final Throwable error) {
             this.error = error;
             return this;
         }
 
-        public Builder allWalks(List<Walk> walks) {
+        public Builder allWalks(final List<Walk> walks) {
             this.walks = walks;
             return this;
         }
 
-        public Builder currentWalkToShow(Walk walk) {
+        public Builder currentWalkToShow(final Walk walk) {
             this.walk = walk;
             return this;
         }

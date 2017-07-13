@@ -1,12 +1,15 @@
-package com.radodosev.mywalks.dashboard;
+package com.radodosev.mywalks.walktracking;
 
 import android.Manifest;
+import android.content.Context;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v13.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,7 +24,7 @@ import com.jakewharton.rxbinding2.view.RxView;
 import com.radodosev.mywalks.R;
 import com.radodosev.mywalks.data.model.ModelMapper;
 import com.radodosev.mywalks.data.model.Walk;
-import com.radodosev.mywalks.domain.DI;
+import com.radodosev.mywalks.di.DI;
 import com.radodosev.mywalks.domain.LocationFetcher;
 import com.radodosev.mywalks.utils.GoogleMapUtils;
 import com.radodosev.mywalks.walksjournal.WalksJournalActivity;
@@ -32,24 +35,24 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import io.reactivex.Observable;
-import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
 
-import static com.radodosev.mywalks.dashboard.DashboardViewState.State.ERROR;
-import static com.radodosev.mywalks.dashboard.DashboardViewState.State.GPS_NOT_AVAILABLE;
-import static com.radodosev.mywalks.dashboard.DashboardViewState.State.GPS_OFF;
-import static com.radodosev.mywalks.dashboard.DashboardViewState.State.GPS_ON;
-import static com.radodosev.mywalks.dashboard.DashboardViewState.State.LOCATION_PERMISSION_NOT_GRANTED;
-import static com.radodosev.mywalks.dashboard.DashboardViewState.State.WALK_FINISHED;
-import static com.radodosev.mywalks.dashboard.DashboardViewState.State.WALK_IN_PROGRESS;
-import static com.radodosev.mywalks.dashboard.DashboardViewState.State.WALK_STARTED;
+import static com.radodosev.mywalks.walktracking.WalkTrackingViewState.State.ERROR;
+import static com.radodosev.mywalks.walktracking.WalkTrackingViewState.State.GPS_NOT_AVAILABLE;
+import static com.radodosev.mywalks.walktracking.WalkTrackingViewState.State.GPS_OFF;
+import static com.radodosev.mywalks.walktracking.WalkTrackingViewState.State.GPS_ON;
+import static com.radodosev.mywalks.walktracking.WalkTrackingViewState.State.LOCATION_PERMISSION_NOT_GRANTED;
+import static com.radodosev.mywalks.walktracking.WalkTrackingViewState.State.WALK_FINISHED;
+import static com.radodosev.mywalks.walktracking.WalkTrackingViewState.State.WALK_IN_PROGRESS;
+import static com.radodosev.mywalks.walktracking.WalkTrackingViewState.State.WALK_STARTED;
 
-public class DashboardActivity extends MviActivity<DashboardView, DashboardPresenter>
-        implements DashboardView, OnMapReadyCallback {
+public class WalkTrackingActivity extends MviActivity<WalkTrackingView, WalkTrackingPresenter>
+        implements WalkTrackingView, OnMapReadyCallback {
     private static final int REQUEST_CODE_CHECK_SETTINGS = 123;
     private static final int REQUEST_CODE_CHECK_LOCATION_PERMISSION = 321;
 
+    // ----- Instance fields -----
     @BindView(R.id.button_start_stop_tracking)
     FloatingActionButton startStopTrackingButton;
 
@@ -58,20 +61,21 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
     private Subject<Boolean> trackWalkingIntent;
     private Subject<Boolean> checkLocationRequirementsIntent;
 
+    // ----- Activity lifecycle logic -----
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         viewUnbinder = ButterKnife.bind(this);
         trackWalkingIntent = PublishSubject.create();
-        checkLocationRequirementsIntent = PublishSubject.create();
+//        checkLocationRequirementsIntent = PublishSubject.create();
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onStart() {
+        super.onStart();
+//        checkLocationRequirementsIntent.onNext(true);
         trackWalkingIntent.onNext(true);
-        checkLocationRequirementsIntent.onNext(true);
     }
 
     @Override
@@ -91,15 +95,23 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        viewUnbinder.unbind();
+    }
+
+    // ----- Creating the presenter -----
     @NonNull
     @Override
-    public DashboardPresenter createPresenter() {
+    public WalkTrackingPresenter createPresenter() {
         return DI.provideDashboardPresenter(this);
     }
 
+    // ----- Exposing the view intents-----
     @Override
     public Observable<Boolean> checkLocationRequirements() {
-        return checkLocationRequirementsIntent;
+        return Observable.just(true);
     }
 
     @Override
@@ -112,54 +124,61 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
         return RxView.clicks(startStopTrackingButton).map(ignored -> true);
     }
 
+    // ----- Rendering the view state -----
     @Override
-    public void render(final DashboardViewState viewState) {
+    public void render(final WalkTrackingViewState viewState) {
         switch (viewState.getType()) {
             case LOCATION_PERMISSION_NOT_GRANTED:
-                showMessage(getString(R.string.location_permissions_not_granted));
+                renderLocationPermissionNotGranted(viewState);
                 break;
             case GPS_OFF:
-                showTheMap();
-//                showEnableLocationDialog(viewState);
+                renderEnableLocationDialog(viewState);
                 break;
             case GPS_NOT_AVAILABLE:
-                showGPSNoExistent();
+                renderGPSNoExistent();
                 break;
             case GPS_ON:
-                showTheMap();
+                renderTheMap();
                 break;
             case WALK_STARTED:
-                showWalkStarted();
+                renderWalkStarted();
                 break;
             case WALK_IN_PROGRESS:
-                showWalkProgress(viewState);
+                renderWalkProgress(viewState);
                 break;
             case WALK_FINISHED:
-                showWalkFinished(viewState);
+                renderWalkFinished(viewState);
                 break;
             case ERROR:
-                showError(viewState);
+                renderError(viewState);
                 break;
         }
     }
 
-    private void showEnableLocationDialog(DashboardViewState viewState) {
+    private void renderLocationPermissionNotGranted(final WalkTrackingViewState viewState) {
+        renderMessage(getString(R.string.location_permissions_not_granted));
+        if (viewState.getError() == null)
+            return;
+        // Render info dialog with rationale about the permission
+        new AlertDialog.Builder(this)
+                .setMessage(R.string.location_permissions_rationale)
+                .setPositiveButton(getString(R.string.location_permission_rationale_positive_button), null)
+                .create().show();
+    }
+
+    private void renderEnableLocationDialog(final WalkTrackingViewState viewState) {
         try {
-            // Show the dialog by calling startResolutionForResult(),
-            // and check the result in onActivityResult().
             viewState.getLocationSettingsStatus().startResolutionForResult(
-                    DashboardActivity.this,
+                    WalkTrackingActivity.this,
                     REQUEST_CODE_CHECK_SETTINGS);
         } catch (IntentSender.SendIntentException e) {
             // Ignore the error. It will not happen in the real world.
         }
     }
 
-    void showTheMap() {
-        // Obtain the SupportMapFragment and newInstance notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map_view_main_map);
-        mapFragment.getMapAsync(this);
+    void renderTheMap() {
+        ((SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map_view_main_map)).getMapAsync(this);
     }
 
 
@@ -171,16 +190,16 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
         mapView.getUiSettings().setMapToolbarEnabled(false);
     }
 
-    private void showGPSNoExistent() {
-        showMessage(getString(R.string.notification_not_gps_available));
+    private void renderGPSNoExistent() {
+        renderMessage(getString(R.string.notification_not_gps_available));
         startStopTrackingButton.setVisibility(View.GONE);
     }
 
-    private void showWalkStarted() {
-        showMessage(getString(R.string.notification_walk_start));
+    private void renderWalkStarted() {
+        renderMessage(getString(R.string.notification_walk_start));
     }
 
-    private void showWalkProgress(DashboardViewState viewState) {
+    private void renderWalkProgress(WalkTrackingViewState viewState) {
         if (mapView == null)
             return;
 
@@ -195,11 +214,12 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
                 ModelMapper.fromRoutePointToLatLng(currentPoints.get(0)),
                 getString(R.string.marker_label_walk_start));
 
-        Walk.RoutePoint lastPoint = currentPoints.get(currentPoints.size() - 1);
-        mapView.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastPoint.getLatitude(), lastPoint.getLongitude()), 17f));
+        final Walk.RoutePoint currentPositions = currentPoints.get(currentPoints.size() - 1);
+        mapView.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentPositions.getLatitude(),
+                currentPositions.getLongitude()), 17f));
     }
 
-    private void showWalkFinished(DashboardViewState viewState) {
+    private void renderWalkFinished(WalkTrackingViewState viewState) {
         if (mapView == null)
             return;
 
@@ -210,27 +230,28 @@ public class DashboardActivity extends MviActivity<DashboardView, DashboardPrese
                     ModelMapper.fromRoutePointToLatLng(completedPoints.get(completedPoints.size() - 1)),
                     getString(R.string.marker_label_walk_end));
 
-        showMessage(getString(R.string.notification_walk_end));
+        renderMessage(getString(R.string.notification_walk_end));
         startStopTrackingButton.setImageResource(R.drawable.ic_directions_walk);
     }
 
-    private void showError(DashboardViewState viewState) {
+    private void renderError(WalkTrackingViewState viewState) {
         if (viewState.getError() instanceof LocationFetcher.LocationPermissionNotGrantedException)
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     REQUEST_CODE_CHECK_LOCATION_PERMISSION);
 
         startStopTrackingButton.setImageResource(R.drawable.ic_directions_walk);
-        showMessage(viewState.getError().getMessage());
+        renderMessage(viewState.getError().getMessage());
     }
 
-    private void showMessage(String message) {
+    private void renderMessage(String message) {
         Snackbar.make(findViewById(R.id.layout_root), message, Snackbar.LENGTH_LONG).show();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        viewUnbinder.unbind();
+    // ----- Static helper method-----
+    public static Intent getIntent(Context context) {
+        final Intent startIntent = new Intent(context, WalkTrackingActivity.class);
+        startIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        return startIntent;
     }
 }

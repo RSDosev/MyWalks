@@ -15,7 +15,7 @@ import android.view.ViewGroup;
 import com.hannesdorfmann.mosby3.mvi.MviActivity;
 import com.radodosev.mywalks.R;
 import com.radodosev.mywalks.data.model.Walk;
-import com.radodosev.mywalks.domain.DI;
+import com.radodosev.mywalks.di.DI;
 import com.radodosev.mywalks.walksjournal.single_walk.SingleWalkFragment;
 
 import java.util.List;
@@ -28,6 +28,7 @@ import io.reactivex.Observable;
 public class WalksJournalActivity extends MviActivity<WalksJournalView, WalksJournalPresenter>
         implements WalksJournalView {
 
+    // ----- Instance fields -----
     @BindView(R.id.recycle_view_walks_journal)
     RecyclerView walksView;
     @BindView(R.id.view_loading)
@@ -39,6 +40,7 @@ public class WalksJournalActivity extends MviActivity<WalksJournalView, WalksJou
     private WalksJournalAdapter walksAdapter;
     private Unbinder viewUnbinder;
 
+    // ----- Activity lifecycle logic -----
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,12 +48,6 @@ public class WalksJournalActivity extends MviActivity<WalksJournalView, WalksJou
         viewUnbinder = ButterKnife.bind(this);
 
         initWalksView();
-//        List<Walk.RoutePoint> points = new ArrayList<>();
-//        for (int i=0; i<5; i++){
-//            points.add(new Walk.RoutePoint(23.4, 12.43323));
-//        }
-//        Walk walk = new Walk(new Date(), new Date(), points);
-//        WalksLocalDataSource.get().addWalk(walk);
     }
 
     private void initWalksView() {
@@ -61,30 +57,43 @@ public class WalksJournalActivity extends MviActivity<WalksJournalView, WalksJou
 
         singleWalkView = BottomSheetBehavior.from(findViewById(R.id.layout_single_walk));
         singleWalkView.setHideable(true);
-        singleWalkView.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        singleWalkView.setState(BottomSheetBehavior.STATE_HIDDEN);
     }
 
+    @Override
+    public void onBackPressed() {
+        if (singleWalkView.getState() != BottomSheetBehavior.STATE_HIDDEN) {
+            singleWalkView.setState(BottomSheetBehavior.STATE_HIDDEN);
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        viewUnbinder.unbind();
+    }
+
+    // ----- Creating the presenter -----
     @NonNull
     @Override
     public WalksJournalPresenter createPresenter() {
         return DI.provideWalksJournalPresenter();
     }
 
+    // ----- Exposing the view intents-----
     @Override
     public Observable<Boolean> loadWalksIntent() {
         return Observable.just(true);
     }
 
     @Override
-    public Observable<Walk> selectWalkIntent() {
+    public Observable<Walk> viewSingleWalkIntent() {
         return walksAdapter.walkClickObservable();
     }
 
-    @Override
-    public Observable<Walk> removeWalkIntent() {
-        return null;
-    }
-
+    // ----- Rendering the view state -----
     @Override
     public void render(WalksJournalViewState viewState) {
         TransitionManager.beginDelayedTransition(rootView);
@@ -121,12 +130,7 @@ public class WalksJournalActivity extends MviActivity<WalksJournalView, WalksJou
         walksAdapter.setWalks(walks);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        viewUnbinder.unbind();
-    }
-
+    // ----- Static helper method-----
     public static void start(Context context) {
         context.startActivity(new Intent(context, WalksJournalActivity.class));
     }

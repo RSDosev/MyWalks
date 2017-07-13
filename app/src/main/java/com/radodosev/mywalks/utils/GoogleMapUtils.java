@@ -1,6 +1,9 @@
 package com.radodosev.mywalks.utils;
 
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptor;
@@ -21,11 +24,12 @@ import java.util.List;
 import io.reactivex.Observable;
 
 /**
- * Created by blue on 9.7.2017 г..
+ * Created by blue on 9.7.2017 г.
+ * Utility class for drawing on {@link GoogleMap}
  */
-
 public final class GoogleMapUtils {
-    private GoogleMapUtils(){}
+    private GoogleMapUtils() {
+    }
 
     public static void drawDottedRoute(final GoogleMap map,
                                        final List<LatLng> points) {
@@ -37,7 +41,7 @@ public final class GoogleMapUtils {
 
         final List<PatternItem> routePattern = Arrays.asList(new Dot(), new Gap(CommonUtils.dpToPx(6)));
         routeOptions.pattern(routePattern);
-        routeOptions.color(Color.RED);
+        routeOptions.color(Color.parseColor("#0288D1"));
         routeOptions.jointType(JointType.BEVEL);
         routeOptions.width(CommonUtils.dpToPx(6));
         map.addPolyline(routeOptions);
@@ -48,9 +52,21 @@ public final class GoogleMapUtils {
                                   final String label) {
         map.addMarker(new MarkerOptions()
                 .position(point)
-//                .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_location))
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker))
                 .draggable(false)
                 .visible(true)
                 .title(label));
+    }
+
+    public static boolean openLocationIfPossible(Context context, double latitude, double longitude) {
+        final Uri intentUri = Uri.parse(String.format("geo:0,0?q=%f,%f", latitude, longitude));
+        final Intent mapIntent = new Intent(Intent.ACTION_VIEW, intentUri);
+        mapIntent.setPackage("com.google.android.apps.maps");
+
+        if (mapIntent.resolveActivity(context.getPackageManager()) != null) {
+            context.startActivity(mapIntent);
+            return true;
+        }
+        return false;
     }
 }

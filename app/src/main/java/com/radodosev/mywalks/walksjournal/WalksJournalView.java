@@ -31,21 +31,18 @@ import io.reactivex.Observable;
  */
 public interface WalksJournalView extends MvpView {
 
+  /**
+   * View intent of loading all the walks
+   */
   Observable<Boolean> loadWalksIntent();
 
   /**
-   * Intent to mark a given item as selected
+   * View intent of showing single walk
    */
-  Observable<Walk> selectWalkIntent();
+  Observable<Walk> viewSingleWalkIntent();
 
   /**
-   * Intent to remove a given item from the shopping cart
-   */
-  Observable<Walk> removeWalkIntent();
-
-
-  /**
-   * Renders the viewState
+   * Renders the view state
    */
   void render(WalksJournalViewState viewState);
 }

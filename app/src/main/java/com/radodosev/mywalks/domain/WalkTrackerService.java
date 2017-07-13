@@ -2,26 +2,29 @@ package com.radodosev.mywalks.domain;
 
 import android.app.ActivityManager;
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.os.IBinder;
-import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 
 import com.radodosev.mywalks.R;
+import com.radodosev.mywalks.di.DI;
+import com.radodosev.mywalks.walktracking.WalkTrackingActivity;
 
 import io.reactivex.Observable;
-import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Function;
 import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.Subject;
 
 import static com.radodosev.mywalks.domain.WalksTracker.WalkTrackState.Status.ERROR;
 
 /**
- * Created by blue on 9.7.2017 г..
+ * Created by blue on 9.7.2017 г.
+ * Service which runs in background. It's main functionality is to wrap the {@link WalksTracker}
+ * and reemit its state when someone subscribes.
  */
 
 public class WalkTrackerService extends Service {
@@ -36,10 +39,7 @@ public class WalkTrackerService extends Service {
         setTheWalksTracker();
         walksTracker.startTracking(this);
 
-        startForeground(SERVICE_NOTIFICATION_ID, new Notification.Builder(this)
-                .setContentText("Walk tracking in progress...")
-                .setSmallIcon(R.drawable.ic_directions_walk)
-                .build());
+        startForeground(SERVICE_NOTIFICATION_ID, makeServiceNotification());
         return START_STICKY;
     }
 
@@ -57,6 +57,20 @@ public class WalkTrackerService extends Service {
                 }, trackEmitter::onError);
     }
 
+    private Notification makeServiceNotification() {
+        return new Notification.Builder(this)
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_directions_walk))
+                .setContentText(getString(R.string.notification_walk_in_progress_text))
+                .setContentTitle(getString(R.string.app_name))
+                .setContentIntent(PendingIntent.getActivity(this, 0, WalkTrackingActivity.getIntent(this), 0))
+                .setSmallIcon(R.drawable.ic_directions_walk)
+                .build();
+    }
+
+    /**
+     * Provides functionality for external classes to subscribe for subsequent tracking changes
+     * @return Observable emitting the {@link com.radodosev.mywalks.domain.WalksTracker.WalkTrackState}
+     */
     public static Observable<WalksTracker.WalkTrackState> subscribe() {
         if (trackEmitter.hasThrowable())
             trackEmitter = BehaviorSubject.create();

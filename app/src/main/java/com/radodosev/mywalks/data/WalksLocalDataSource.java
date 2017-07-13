@@ -7,16 +7,20 @@ import com.radodosev.mywalks.data.model.ModelMapper;
 import com.radodosev.mywalks.data.model.Walk;
 import com.raizlabs.android.dbflow.rx2.language.RXSQLite;
 import com.raizlabs.android.dbflow.sql.language.SQLite;
+import com.raizlabs.android.dbflow.sql.queriable.StringQuery;
 
 import java.util.List;
 
 import io.reactivex.Observable;
+import timber.log.Timber;
 
 /**
  * Created by Rado on 7/8/2017.
+ * Manages the access on the Walks database.
  */
-
 public class WalksLocalDataSource implements WalksDataSource {
+    public static String TAG = WalksLocalDataSource.class.getSimpleName();
+
     private static class InstanceHolder {
         private static final WalksLocalDataSource INSTANCE = new WalksLocalDataSource();
     }
@@ -41,7 +45,8 @@ public class WalksLocalDataSource implements WalksDataSource {
                 SQLite.select().from(WalksTable.class).where(WalksTable_Table.id.eq(walkId)))
                 .querySingle()
                 .map(ModelMapper::fromWalksTableToWalk)
-                .toObservable();
+                .toObservable()
+                .doOnNext(walk -> Timber.d(TAG + ": getWalk %s", walk));
     }
 
     @Override
@@ -52,6 +57,7 @@ public class WalksLocalDataSource implements WalksDataSource {
                 .flatMapObservable(Observable::fromIterable)
                 .map(ModelMapper::fromWalksTableToWalk)
                 .toList()
-                .toObservable();
+                .toObservable()
+                .doOnNext(walks -> Timber.d(TAG + ": getAllWalks %s", walks));
     }
 }

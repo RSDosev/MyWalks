@@ -32,7 +32,7 @@ class SingleWalkViewState {
     private final Throwable error;
     private final Walk walk;
 
-    SingleWalkViewState(int type, Throwable error, Walk walk) {
+    SingleWalkViewState(final int type, final Throwable error, final Walk walk) {
         this.type = type;
         this.error = error;
         this.walk = walk;
@@ -52,11 +52,11 @@ class SingleWalkViewState {
         return walk;
     }
 
-    public static SingleWalkViewState ERROR(Throwable error) {
+    public static SingleWalkViewState ERROR(final Throwable error) {
         return new SingleWalkViewState(ERROR, error, null);
     }
 
-    public static SingleWalkViewState WALK_LOADED(Walk walk) {
+    public static SingleWalkViewState WALK_LOADED(final Walk walk) {
         return new SingleWalkViewState(WALK_LOADED, null, walk);
     }
 

@@ -21,7 +21,7 @@ public interface WalksJournalViewStatePartialChanges {
     final class Error implements WalksJournalViewStatePartialChanges{
         private final Throwable error;
 
-        public Error(Throwable error) {
+        public Error(final Throwable error) {
             this.error = error;
         }
 
@@ -40,7 +40,7 @@ public interface WalksJournalViewStatePartialChanges {
     final class AllWalksLoaded implements WalksJournalViewStatePartialChanges{
         private final List<Walk> walks;
 
-        public AllWalksLoaded(List<Walk> walks) {
+        public AllWalksLoaded(final List<Walk> walks) {
             this.walks = walks;
         }
 
@@ -59,7 +59,7 @@ public interface WalksJournalViewStatePartialChanges {
     final class SingleWalkShown implements WalksJournalViewStatePartialChanges{
         private final Walk walk;
 
-        public SingleWalkShown(Walk walk) {
+        public SingleWalkShown(final Walk walk) {
             this.walk = walk;
         }
 

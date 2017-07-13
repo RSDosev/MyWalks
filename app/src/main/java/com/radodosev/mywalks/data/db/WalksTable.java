@@ -21,10 +21,9 @@ import java.util.UUID;
 public class WalksTable extends BaseRXModel {
     public static final String COLUMN_ID = "id";
 
-
     @Unique
     @Column(name = COLUMN_ID)
-    @PrimaryKey(autoincrement=true)
+    @PrimaryKey(autoincrement = true)
     long id;
 
     @Column
@@ -33,13 +32,18 @@ public class WalksTable extends BaseRXModel {
     @Column
     Date endTime;
 
+    @Column
+    float distance;
+
     List<RoutePointsTable> routePoints;
 
-    public WalksTable(){}
+    public WalksTable() {
+    }
 
-    public WalksTable(Date startTime, Date endTime, List<RoutePointsTable> routePoints){
+    public WalksTable(Date startTime, Date endTime, float distance, List<RoutePointsTable> routePoints) {
         this.startTime = startTime;
         this.endTime = endTime;
+        this.distance = distance;
         this.routePoints = routePoints;
     }
 
@@ -60,6 +64,10 @@ public class WalksTable extends BaseRXModel {
 
     public Date getStartTime() {
         return startTime;
+    }
+
+    public float getDistance() {
+        return distance;
     }
 
     public long getId() {

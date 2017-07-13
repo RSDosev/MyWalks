@@ -15,41 +15,31 @@
  *
  */
 
-package com.radodosev.mywalks.dashboard;
+package com.radodosev.mywalks.walktracking;
 
 import com.hannesdorfmann.mosby3.mvp.MvpView;
 
 import io.reactivex.Observable;
 
-/**
- * The HomeView responsible to display a list of {@link }
- *
- * @author Hannes Dorfmann
- */
-public interface DashboardView extends MvpView {
+public interface WalkTrackingView extends MvpView {
 
-  /**
-   * The intent to load the first page
-   *
-   * @return The emitted item boolean can be ignored because it is always true
-   */
-  Observable<Boolean> checkLocationRequirements();
+    /**
+     * View intent of checking the location fetching requirements
+     */
+    Observable<Boolean> checkLocationRequirements();
 
+    /**
+     * View intent of subscribing for walk tracking data
+     */
+    Observable<Boolean> trackAWalk();
 
-  Observable<Boolean> trackAWalk();
+    /**
+     * View intent of starting and stopping the walk tracking
+     */
+    Observable<Boolean> startStopTracking();
 
-  /**
-   * The intent to load the next page
-   *
-   * @return The emitted item boolean can be ignored because it is always true
-   */
-  Observable<Boolean> startStopTracking();
-
-
-
-
-  /**
-   * Renders the viewState
-   */
-  void render(DashboardViewState viewState);
+    /**
+     * Renders the view state
+     */
+    void render(WalkTrackingViewState viewState);
 }

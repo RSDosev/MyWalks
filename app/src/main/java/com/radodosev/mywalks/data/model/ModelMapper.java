@@ -12,33 +12,42 @@ import io.reactivex.Observable;
  * Created by Rado on 7/8/2017.
  */
 
+/**
+ * Utility class for converting/mapping between model classes
+ */
 public final class ModelMapper {
     private ModelMapper() {
     }
 
     public static WalksTable fromWalksToWalkTable(final Walk walk) {
-        return new WalksTable(walk.getStartTime(), walk.getEndTime(), fromRoutePointsToRoutePointsTable(walk.getRoutePoints()));
+        return new WalksTable(walk.getStartTime(), walk.getEndTime(), walk.getDistanceInMeters(),
+                fromRoutePointsToRoutePointsTable(walk.getRoutePoints()));
     }
 
     public static List<RoutePointsTable> fromRoutePointsToRoutePointsTable(final List<Walk.RoutePoint> routePoints) {
         return Observable
                 .fromIterable(routePoints)
-                .map(routePoint -> new RoutePointsTable(routePoint.getLatitude(), routePoint.getLongitude()))
+                .map(routePoint -> new RoutePointsTable(routePoint.getLatitude(),
+                        routePoint.getLongitude(),
+                        routePoint.getSpeed()))
                 .toList()
                 .blockingGet();
     }
 
     public static Walk fromWalksTableToWalk(final WalksTable walksTable) {
-        return Walk.createNew(walksTable.getId()
-                , walksTable.getStartTime()
-                , walksTable.getEndTime()
-                , fromRoutePointsTableToRoutePoints(walksTable.getRoutePoints()));
+        return new Walk(walksTable.getId(),
+                walksTable.getStartTime(),
+                walksTable.getEndTime(),
+                walksTable.getDistance(),
+                fromRoutePointsTableToRoutePoints(walksTable.getRoutePoints()));
     }
 
     public static List<Walk.RoutePoint> fromRoutePointsTableToRoutePoints(final List<RoutePointsTable> routePointsTables) {
         return Observable
                 .fromIterable(routePointsTables)
-                .map(routePointsTable -> new Walk.RoutePoint(routePointsTable.getLatitude(), routePointsTable.getLongitude()))
+                .map(routePointsTable -> new Walk.RoutePoint(routePointsTable.getLatitude(),
+                        routePointsTable.getLongitude(),
+                        routePointsTable.getSpeed()))
                 .toList()
                 .blockingGet();
     }

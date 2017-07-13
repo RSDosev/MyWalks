@@ -1,19 +1,23 @@
-package com.radodosev.mywalks.domain;
+package com.radodosev.mywalks.di;
 
 import android.app.Activity;
 
 import com.hannesdorfmann.mosby3.mvi.MviPresenter;
-import com.radodosev.mywalks.dashboard.DashboardPresenter;
+import com.radodosev.mywalks.domain.LocationFetcher;
+import com.radodosev.mywalks.domain.WalksTracker;
+import com.radodosev.mywalks.walktracking.WalkTrackingPresenter;
 import com.radodosev.mywalks.data.WalksLocalDataSource;
 import com.radodosev.mywalks.walksjournal.WalksJournalPresenter;
 import com.radodosev.mywalks.walksjournal.single_walk.SingleWalkPresenter;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
 /**
- * Created by blue on 9.7.2017 г..
+ * Created by blue on 9.7.2017 г.
+ * Basic dependency injection
  */
+public final class DI {
+    private DI(){}
 
-public class DI {
     public static LocationFetcher provideLocationFetcher() {
         return LocationFetcher.newInstance();
     }
@@ -26,8 +30,8 @@ public class DI {
         return WalksTracker.get();
     }
 
-    public static DashboardPresenter provideDashboardPresenter(Activity activity) {
-        return new DashboardPresenter(new RxPermissions(activity), provideWalksTracker(), provideLocationFetcher());
+    public static WalkTrackingPresenter provideDashboardPresenter(Activity activity) {
+        return new WalkTrackingPresenter(new RxPermissions(activity));
     }
 
     public static WalksJournalPresenter provideWalksJournalPresenter() {

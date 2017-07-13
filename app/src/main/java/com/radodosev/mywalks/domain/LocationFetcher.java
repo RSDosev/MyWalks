@@ -26,6 +26,7 @@ import java.lang.annotation.Retention;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
+import timber.log.Timber;
 
 import static com.radodosev.mywalks.domain.LocationFetcher.Mode.LOCATION;
 import static com.radodosev.mywalks.domain.LocationFetcher.Mode.SETTINGS;
@@ -33,8 +34,9 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
  * Created by Rado on 11/25/2016.
+ * Rx based wrapper of the Google's FusedLocationApi for fetching the current location
+ * with functionality to check locations's settings' status as well
  */
-
 public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
@@ -61,6 +63,12 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
         return new LocationFetcher();
     }
 
+    /**
+     * Checks if the settings for making location requests are on. GPS, Airplane mode and etc.
+     *
+     * @param context current Context
+     * @return Observable which emits the location settings when they are checked
+     */
     public Observable<LocationSettingsStatus> getLocationSettings(final Context context) {
         return Observable.create(emitter -> {
             locationSettingsEmitter = emitter;
@@ -69,6 +77,12 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
         });
     }
 
+    /**
+     * Requests the current location on every 1 second or every 10 meters
+     *
+     * @param context current Context
+     * @return Observable which emits the current location on every location change
+     */
     public Observable<Location> getLocationUpdates(final Context context) {
         return Observable.create(emitter -> {
             locationEmitter = emitter;
@@ -105,12 +119,13 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
     private void requestCurrentLocationSettings() {
         if (locationSettingsEmitter.isDisposed())
             return;
-        PendingResult<LocationSettingsResult> locationSettingsResult = LocationServices.SettingsApi.checkLocationSettings(
-                googleApiClient,
-                new LocationSettingsRequest.Builder()
-                        .addLocationRequest(createLocationRequest())
-                        .setAlwaysShow(true)
-                        .build());
+        final PendingResult<LocationSettingsResult> locationSettingsResult =
+                LocationServices.SettingsApi.checkLocationSettings(
+                        googleApiClient,
+                        new LocationSettingsRequest.Builder()
+                                .addLocationRequest(createLocationRequest())
+                                .setAlwaysShow(true)
+                                .build());
 
         locationSettingsResult.setResultCallback(result -> {
             if (locationSettingsEmitter.isDisposed())
@@ -221,7 +236,7 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
     }
 
     public static class LocationPermissionNotGrantedException extends IllegalStateException {
-        public LocationPermissionNotGrantedException(String message){
+        public LocationPermissionNotGrantedException(String message) {
             super(message);
         }
     }

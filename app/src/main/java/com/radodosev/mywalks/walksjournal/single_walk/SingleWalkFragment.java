@@ -20,7 +20,7 @@ import com.hannesdorfmann.mosby3.mvi.MviPresenter;
 import com.radodosev.mywalks.R;
 import com.radodosev.mywalks.data.model.ModelMapper;
 import com.radodosev.mywalks.data.model.Walk;
-import com.radodosev.mywalks.domain.DI;
+import com.radodosev.mywalks.di.DI;
 import com.radodosev.mywalks.utils.CommonUtils;
 import com.radodosev.mywalks.utils.GoogleMapUtils;
 
@@ -39,16 +39,17 @@ import static com.radodosev.mywalks.walksjournal.single_walk.SingleWalkViewState
  * Created by Rado on 7/11/2017.
  */
 
-public class SingleWalkFragment extends MviFragment implements SingleWalkView, OnMapReadyCallback {
+public class SingleWalkFragment extends MviFragment implements SingleWalkView, OnMapReadyCallback, GoogleMap.OnMapLoadedCallback {
     public static String TAG = SingleWalkFragment.class.getSimpleName();
     private static String EXTRA_WALK_ID = "EXTRA_WALK_ID";
 
-
+    // ----- Instance fields -----
     private GoogleMap mapView;
     private View loadingView;
     private long walkId;
     private Subject<Long> onMapLoadedIntent = PublishSubject.create();
 
+    // ----- Fragment lifecycle logic -----
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -70,6 +71,10 @@ public class SingleWalkFragment extends MviFragment implements SingleWalkView, O
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        initTheMap();
+    }
+
+    private void initTheMap() {
         // Obtain the SupportMapFragment and newInstance notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.map_view_single_walk_map);
@@ -79,45 +84,59 @@ public class SingleWalkFragment extends MviFragment implements SingleWalkView, O
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mapView = googleMap;
+        mapView.setOnMapLoadedCallback(this);
         mapView.getUiSettings().setMapToolbarEnabled(false);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putLong(EXTRA_WALK_ID, walkId);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onMapLoaded() {
         onMapLoadedIntent.onNext(walkId);
     }
 
+    // ----- Creating the presenter -----
     @NonNull
     @Override
     public MviPresenter createPresenter() {
         return DI.provideSingleWalkPresenter();
     }
 
+    // ----- Exposing the view intents-----
     @Override
     public Observable<Long> loadWalkIntent() {
         return onMapLoadedIntent;
     }
 
+    // ----- Rendering the view state -----
     @Override
     public void render(SingleWalkViewState viewState) {
         switch (viewState.getType()) {
             case WALK_LOADED:
-                showTheWalk(viewState.getWalk());
+                renderTheWalk(viewState.getWalk());
                 break;
             case ERROR:
-                showError(viewState.getError());
+                renderError(viewState.getError());
                 break;
             case LOADING:
-                showLoading();
+                renderLoading();
                 break;
         }
     }
 
-    private void showError(Throwable error) {
+    private void renderError(final Throwable error) {
         Toast.makeText(getActivity(), error.getMessage(), Toast.LENGTH_LONG).show();
     }
 
-    private void showLoading() {
+    private void renderLoading() {
         loadingView.setVisibility(View.VISIBLE);
     }
 
-    private void showTheWalk(Walk walk) {
+    private void renderTheWalk(final Walk walk) {
         loadingView.setVisibility(View.INVISIBLE);
 
         if (mapView == null || walk.getRoutePoints().isEmpty())
@@ -136,13 +155,8 @@ public class SingleWalkFragment extends MviFragment implements SingleWalkView, O
         GoogleMapUtils.drawMarker(mapView, points.get(points.size()-1), "Here you stopped");
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        outState.putLong(EXTRA_WALK_ID, walkId);
-        super.onSaveInstanceState(outState);
-    }
-
-    public static Fragment newInstance(long walkId) {
+    // ----- Static helper method-----
+    public static Fragment newInstance(final long walkId) {
         final Bundle arguments = new Bundle();
         arguments.putLong(EXTRA_WALK_ID, walkId);
         final SingleWalkFragment singleWalkView = new SingleWalkFragment();

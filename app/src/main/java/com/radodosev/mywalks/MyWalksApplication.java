@@ -6,11 +6,14 @@ import android.content.Context;
 import com.raizlabs.android.dbflow.config.FlowManager;
 import com.squareup.leakcanary.LeakCanary;
 
+import timber.log.Timber;
+
 /**
  * Created by Rado on 7/8/2017.
  */
 
 public class MyWalksApplication extends Application {
+    // create reference to the application context, to available later at any time
     private static Context appContext;
 
     @Override
@@ -20,6 +23,11 @@ public class MyWalksApplication extends Application {
 
         initDBFlow();
         initLeakCanary();
+        initTimber();
+    }
+
+    private void initTimber() {
+        Timber.plant(new Timber.DebugTree());
     }
 
     private void initLeakCanary() {

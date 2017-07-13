@@ -28,7 +28,13 @@ import io.reactivex.Observable;
  */
 public interface SingleWalkView extends MvpView {
 
+  /**
+   * View intent of loading single walk
+   */
   Observable<Long> loadWalkIntent();
 
+  /**
+   * Renders the view state
+   */
   void render(SingleWalkViewState viewState);
 }

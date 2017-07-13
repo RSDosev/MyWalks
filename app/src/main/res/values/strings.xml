@@ -13,4 +13,13 @@
     <string name="notification_walk_end">Walk finished...</string>
     <string name="notification_walk_start">Walk started...</string>
     <string name="notification_not_gps_available">No GPS module! Sorry, nothing to do about it!</string>
+    <string name="label_walk_max_speed">Max speed</string>
+    <string name="label_walk_average_speed">Avg speed</string>
+    <string name="distance_postfix_meters">m</string>
+    <string name="distance_postfix_kilometers">km</string>
+    <string name="speed_format">%.2f km/h</string>
+    <string name="navigate_to_location_error">Install Google Maps to be able to navigate to this location!</string>
+    <string name="notification_walk_in_progress_text">Walk tracking in progress...</string>
+    <string name="location_permissions_rationale">Location permissions should be granted if you wish to use this application. Please go to settings and check the permissions.</string>
+    <string name="location_permission_rationale_positive_button">OK</string>
 </resources>

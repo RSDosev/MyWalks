@@ -18,16 +18,19 @@
 package com.radodosev.mywalks.walksjournal;
 
 import android.app.Activity;
+import android.content.Context;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.radodosev.mywalks.R;
 import com.radodosev.mywalks.data.model.Walk;
 import com.radodosev.mywalks.utils.CommonUtils;
+import com.radodosev.mywalks.utils.GoogleMapUtils;
 
 import java.util.List;
 
@@ -103,12 +106,21 @@ public class WalksJournalAdapter extends RecyclerView.Adapter<WalksJournalAdapte
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        View rootView;
         @BindView(R.id.text_view_start_time)
         TextView startTime;
+        @BindView(R.id.button_navigate_to_start)
+        View navigateToStartButton;
         @BindView(R.id.text_view_end_time)
         TextView endTime;
-        View rootView;
-
+        @BindView(R.id.button_navigate_to_finish)
+        View navigateToEndButton;
+        @BindView(R.id.text_view_distance)
+        TextView distanceView;
+        @BindView(R.id.text_view_max_speed)
+        TextView maxSpeedView;
+        @BindView(R.id.text_view_average_speed)
+        TextView avgSpeedView;
 
         public static ViewHolder create(ViewGroup parent, LayoutInflater inflater) {
             return new ViewHolder(inflater.inflate(R.layout.list_item_walk, parent, false));
@@ -118,17 +130,35 @@ public class WalksJournalAdapter extends RecyclerView.Adapter<WalksJournalAdapte
             super(rootView);
             this.rootView = rootView;
             ButterKnife.bind(this, rootView);
+            distanceView.setIncludeFontPadding(false);
+            avgSpeedView.setIncludeFontPadding(false);
         }
 
         public void bind(Walk walk, OnWalkSelectedListener onWalkSelectedListener) {
+            Context context = rootView.getContext();
             rootView.setOnClickListener(view -> onWalkSelectedListener.onWalkSelected(walk));
             startTime.setText(CommonUtils.formatDateInMyLocale(walk.getStartTime()));
             endTime.setText(CommonUtils.formatDateInMyLocale(walk.getEndTime()));
+            navigateToStartButton.setOnClickListener(view -> {
+                openLocationInMapsShowError(context, walk.getRoutePoints().get(0));
+            });
+            navigateToEndButton.setOnClickListener(view -> {
+                final Walk.RoutePoint lastLocation = walk.getRoutePoints().get(walk.getRoutePoints().size() - 1);
+                openLocationInMapsShowError(context, lastLocation);
+            });
+            distanceView.setText(CommonUtils.formatDistance(context, walk.getDistanceInMeters()));
+            maxSpeedView.setText(CommonUtils.formatSpeed(context, walk.getMaxSpeed()));
+            avgSpeedView.setText(CommonUtils.formatSpeed(context, walk.getAverageSpeed()));
+        }
+
+        private void openLocationInMapsShowError(Context context, Walk.RoutePoint firstLocation) {
+            if (!GoogleMapUtils.openLocationIfPossible(context, firstLocation.getLatitude(),
+                    firstLocation.getLongitude()))
+                Toast.makeText(context, R.string.navigate_to_location_error, Toast.LENGTH_SHORT).show();
         }
 
         public interface OnWalkSelectedListener {
             void onWalkSelected(Walk walk);
         }
     }
-
 }
