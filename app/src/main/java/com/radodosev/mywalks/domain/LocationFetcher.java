@@ -192,6 +192,8 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
     public void onLocationChanged(Location location) {
         if (isLocationSubscriberHere())
             locationEmitter.onNext(location);
+        else
+            disconnectFromLocationService();
     }
 
     private boolean isLocationSubscriberHere() {
@@ -199,8 +201,10 @@ public class LocationFetcher implements GoogleApiClient.ConnectionCallbacks,
     }
 
     private void disconnectFromLocationService() {
-        if (googleApiClient.isConnected())
+        if (googleApiClient.isConnected()) {
             googleApiClient.disconnect();
+            googleApiClient = null;
+        }
     }
 
     public static class LocationSettingsStatus {

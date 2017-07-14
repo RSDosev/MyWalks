@@ -61,6 +61,7 @@ public class WalkTrackingActivity extends MviActivity<WalkTrackingView, WalkTrac
     private Subject<Boolean> trackWalkingIntent;
     private Subject<Boolean> checkLocationRequirementsIntent;
 
+
     // ----- Activity lifecycle logic -----
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,13 +69,13 @@ public class WalkTrackingActivity extends MviActivity<WalkTrackingView, WalkTrac
         setContentView(R.layout.activity_main);
         viewUnbinder = ButterKnife.bind(this);
         trackWalkingIntent = PublishSubject.create();
-//        checkLocationRequirementsIntent = PublishSubject.create();
+        checkLocationRequirementsIntent = PublishSubject.create();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-//        checkLocationRequirementsIntent.onNext(true);
+        checkLocationRequirementsIntent.onNext(true);
         trackWalkingIntent.onNext(true);
     }
 
@@ -111,7 +112,7 @@ public class WalkTrackingActivity extends MviActivity<WalkTrackingView, WalkTrac
     // ----- Exposing the view intents-----
     @Override
     public Observable<Boolean> checkLocationRequirements() {
-        return Observable.just(true);
+        return checkLocationRequirementsIntent;
     }
 
     @Override

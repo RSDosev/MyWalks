@@ -58,11 +58,11 @@ public final class CommonUtils {
      * Formats speed in km/h
      * For example: 123 -> 123km/h
      * @param context current context
-     * @param speed the speed
+     * @param speedInMetersPerHour the speed in meters per hour
      * @return the formatted speed
      */
-    public static String formatSpeed(final Context context, final float speed) {
+    public static String formatSpeed(final Context context, final float speedInMetersPerHour) {
         final String speedFormat = context.getString(R.string.speed_format);
-        return String.format(speedFormat, speed);
+        return String.format(speedFormat, ((speedInMetersPerHour*3600)/1000));
     }
 }
